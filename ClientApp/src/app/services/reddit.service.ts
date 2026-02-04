@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { RedditPost, SubredditInfo } from '../models/reddit.models';
+import { map } from 'rxjs/operators';
+import { RedditPost, SubredditInfo, PaginatedResponse } from '../models/reddit.models';
 
 @Injectable({
   providedIn: 'root'
@@ -11,15 +11,22 @@ export class RedditService {
   private apiUrl = '/api/reddit';
   private selectedPostSubject = new BehaviorSubject<RedditPost | null>(null);
   private readPostsSubject = new BehaviorSubject<Set<string>>(new Set());
+  private currentPaginationSubject = new BehaviorSubject<{ after?: string; before?: string }>({});
 
   selectedPost$ = this.selectedPostSubject.asObservable();
   readPosts$ = this.readPostsSubject.asObservable();
+  currentPagination$ = this.currentPaginationSubject.asObservable();
 
   constructor(private http: HttpClient) {
     this.loadReadPosts();
   }
 
-  getPosts(subreddit: string = 'all', limit: number = 25, after?: string): Observable<RedditPost[]> {
+  getPosts(
+    subreddit: string = 'all',
+    limit: number = 25,
+    after?: string,
+    before?: string
+  ): Observable<PaginatedResponse<RedditPost>> {
     let params = new HttpParams()
       .set('subreddit', subreddit)
       .set('limit', limit.toString());
@@ -27,15 +34,27 @@ export class RedditService {
     if (after) {
       params = params.set('after', after);
     }
+    if (before) {
+      params = params.set('before', before);
+    }
 
-    return this.http.get<RedditPost[]>(`${this.apiUrl}/posts`, { params });
+    return this.http.get<PaginatedResponse<RedditPost>>(`${this.apiUrl}/posts`, { params })
+      .pipe(
+        map(response => {
+          this.currentPaginationSubject.next({
+            after: response.after,
+            before: response.before
+          });
+          return response;
+        })
+      );
   }
 
   getPost(subreddit: string, postId: string): Observable<RedditPost> {
     return this.http.get<RedditPost>(`${this.apiUrl}/posts/${subreddit}/${postId}`);
   }
 
-  getPopularSubreddits(limit: number = 10): Observable<SubredditInfo[]> {
+  getPopularSubreddits(limit: number = 15): Observable<SubredditInfo[]> {
     const params = new HttpParams().set('limit', limit.toString());
     return this.http.get<SubredditInfo[]>(`${this.apiUrl}/subreddits/popular`, { params });
   }
@@ -45,10 +64,21 @@ export class RedditService {
     this.selectedPostSubject.next(post);
   }
 
+  clearSelectedPost(): void {
+    this.selectedPostSubject.next(null);
+  }
+
   markAsRead(postId: string): void {
     const readPosts = this.readPostsSubject.value;
     readPosts.add(postId);
-    this.readPostsSubject.next(readPosts);
+    this.readPostsSubject.next(new Set(readPosts));
+    this.saveReadPosts();
+  }
+
+  markAsUnread(postId: string): void {
+    const readPosts = this.readPostsSubject.value;
+    readPosts.delete(postId);
+    this.readPostsSubject.next(new Set(readPosts));
     this.saveReadPosts();
   }
 
@@ -57,15 +87,21 @@ export class RedditService {
   }
 
   private loadReadPosts(): void {
-    const stored = localStorage.getItem('readPosts');
-    if (stored) {
-      const ids = JSON.parse(stored) as string[];
-      this.readPostsSubject.next(new Set(ids));
+    try {
+      const stored = localStorage.getItem('outlookReddit_readPosts');
+      if (stored) {
+        const ids = JSON.parse(stored) as string[];
+        // Mantener solo los últimos 500 posts leídos
+        const trimmedIds = ids.slice(-500);
+        this.readPostsSubject.next(new Set(trimmedIds));
+      }
+    } catch {
+      this.readPostsSubject.next(new Set());
     }
   }
 
   private saveReadPosts(): void {
-    const ids = Array.from(this.readPostsSubject.value);
-    localStorage.setItem('readPosts', JSON.stringify(ids));
+    const ids = Array.from(this.readPostsSubject.value).slice(-500);
+    localStorage.setItem('outlookReddit_readPosts', JSON.stringify(ids));
   }
 }

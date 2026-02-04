@@ -1,7 +1,7 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RedditService } from '../../services/reddit.service';
-import { RedditPost } from '../../models/reddit.models';
+import { RedditPost, PostType } from '../../models/reddit.models';
 
 @Component({
   selector: 'app-mail-list',
@@ -12,12 +12,12 @@ import { RedditPost } from '../../models/reddit.models';
       <!-- Header -->
       <div class="mail-list-header">
         <div class="header-title">
-          <span class="inbox-name">{{ currentSubreddit === 'all' ? 'Inbox' : 'r/' + currentSubreddit }}</span>
+          <span class="inbox-name">{{ getFolderName() }}</span>
           <span class="mail-count">{{ posts.length }} messages</span>
         </div>
         <div class="header-actions">
-          <button class="icon-btn" title="Refresh" (click)="refresh()">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <button class="icon-btn" title="Refresh" (click)="refresh()" [disabled]="loading">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" [class.spin]="loading">
               <path d="M13.65 2.35A8 8 0 1 0 16 8h-2a6 6 0 1 1-1.76-4.24L10 6h6V0l-2.35 2.35z"/>
             </svg>
           </button>
@@ -29,50 +29,94 @@ import { RedditPost } from '../../models/reddit.models';
         </div>
       </div>
 
+      <!-- Focused/Other Tabs -->
+      <div class="mail-tabs">
+        <button class="tab active">Focused</button>
+        <button class="tab">Other</button>
+      </div>
+
       <!-- Mail Items -->
-      <div class="mail-items">
+      <div class="mail-items" #mailContainer (scroll)="onScroll($event)">
         <div
-          *ngFor="let post of posts"
+          *ngFor="let post of posts; trackBy: trackByPostId"
           class="mail-item"
           [class.unread]="!isRead(post.id)"
           [class.selected]="selectedPost?.id === post.id"
+          [class.important]="post.isImportant"
           (click)="selectPost(post)">
 
+          <!-- Selection checkbox (hidden by default, shown on hover) -->
+          <div class="mail-checkbox">
+            <input type="checkbox" (click)="$event.stopPropagation()">
+          </div>
+
+          <!-- Unread indicator -->
           <div class="mail-indicator" [class.unread]="!isRead(post.id)"></div>
 
           <div class="mail-content">
-            <div class="mail-header">
-              <span class="sender">{{ post.author }}</span>
+            <div class="mail-row-1">
+              <span class="sender" [class.unread]="!isRead(post.id)">{{ post.author }}</span>
+              <div class="mail-icons">
+                <!-- Attachment icon -->
+                <svg *ngIf="post.hasAttachment" class="attachment-icon" width="14" height="14" viewBox="0 0 16 16" title="Has attachment">
+                  <path d="M4.5 3A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13h5a.5.5 0 0 1 0 1h-5A2.5 2.5 0 0 1 2 11.5v-7A2.5 2.5 0 0 1 4.5 2h7A2.5 2.5 0 0 1 14 4.5v2a.5.5 0 0 1-1 0v-2A1.5 1.5 0 0 0 11.5 3h-7z"/>
+                  <path d="M10 10a1 1 0 1 1 2 0v4.5a2.5 2.5 0 0 1-5 0v-5a.5.5 0 0 1 1 0v5a1.5 1.5 0 0 0 3 0V10z"/>
+                </svg>
+                <!-- Important icon -->
+                <svg *ngIf="post.isImportant" class="important-icon" width="14" height="14" viewBox="0 0 16 16" title="Important">
+                  <path d="M8 1l2 4.5 5 .5-3.5 3.5 1 5L8 12l-4.5 2.5 1-5L1 6l5-.5L8 1z"/>
+                </svg>
+              </div>
               <span class="date">{{ formatDate(post.createdUtc) }}</span>
             </div>
-            <div class="mail-subject">{{ post.title }}</div>
-            <div class="mail-preview">
-              <span class="subreddit-tag">r/{{ post.subreddit }}</span>
-              {{ post.selfText | slice:0:100 }}{{ post.selfText.length > 100 ? '...' : '' }}
+
+            <div class="mail-row-2">
+              <span class="subject" [class.unread]="!isRead(post.id)">{{ post.title }}</span>
             </div>
-            <div class="mail-stats">
-              <span class="stat">
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M8 1l2 5 5 1-4 3 1 5-4-3-4 3 1-5-4-3 5-1z"/>
+
+            <div class="mail-row-3">
+              <span class="folder-tag">r/{{ post.subreddit }}</span>
+              <span class="preview">{{ getPreviewText(post) }}</span>
+            </div>
+
+            <!-- Type indicator -->
+            <div class="mail-meta" *ngIf="post.type !== PostType.Text || post.flair">
+              <span class="type-badge" *ngIf="post.type !== PostType.Text">
+                <svg *ngIf="post.type === PostType.Image" width="12" height="12" viewBox="0 0 16 16">
+                  <path d="M1 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4zm1 0v6l3-3 2 2 4-4 3 3V4H2z"/>
                 </svg>
-                {{ post.score }}
-              </span>
-              <span class="stat">
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M14 1H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3v4l4-4h5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
+                <svg *ngIf="post.type === PostType.Video" width="12" height="12" viewBox="0 0 16 16">
+                  <path d="M0 1a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V1zm4 4v6l5-3-5-3z"/>
                 </svg>
-                {{ post.numComments }}
+                <svg *ngIf="post.type === PostType.Link" width="12" height="12" viewBox="0 0 16 16">
+                  <path d="M4.715 6.542L3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.001 1.001 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"/>
+                  <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 0 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 0 0-4.243-4.243L6.586 4.672z"/>
+                </svg>
+                {{ getTypeLabel(post.type) }}
               </span>
+              <span class="flair-badge" *ngIf="post.flair">{{ post.flair }}</span>
             </div>
           </div>
         </div>
 
-        <div *ngIf="loading" class="loading">
+        <!-- Loading more -->
+        <div *ngIf="loadingMore" class="loading-more">
+          <div class="spinner"></div>
+          Loading more messages...
+        </div>
+
+        <!-- Initial loading -->
+        <div *ngIf="loading && posts.length === 0" class="loading">
+          <div class="spinner"></div>
           Loading messages...
         </div>
 
+        <!-- Empty state -->
         <div *ngIf="!loading && posts.length === 0" class="empty">
-          No messages in this folder
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="#c8c6c4">
+            <path d="M40 8H8a4 4 0 0 0-4 4v24a4 4 0 0 0 4 4h32a4 4 0 0 0 4-4V12a4 4 0 0 0-4-4zm-2 4L24 22 10 12h28zm2 24H8V14l16 12 16-12v22z"/>
+          </svg>
+          <p>No messages in this folder</p>
         </div>
       </div>
     </div>
@@ -80,11 +124,14 @@ import { RedditPost } from '../../models/reddit.models';
   styles: [`
     .mail-list {
       width: 360px;
+      min-width: 320px;
+      max-width: 400px;
       height: 100%;
-      background-color: white;
+      background-color: #ffffff;
       border-right: 1px solid #edebe9;
       display: flex;
       flex-direction: column;
+      user-select: none;
     }
 
     .mail-list-header {
@@ -93,6 +140,7 @@ import { RedditPost } from '../../models/reddit.models';
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: #faf9f8;
     }
 
     .header-title {
@@ -101,7 +149,7 @@ import { RedditPost } from '../../models/reddit.models';
     }
 
     .inbox-name {
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 600;
       color: #323130;
     }
@@ -109,6 +157,7 @@ import { RedditPost } from '../../models/reddit.models';
     .mail-count {
       font-size: 12px;
       color: #605e5c;
+      margin-top: 2px;
     }
 
     .header-actions {
@@ -117,30 +166,86 @@ import { RedditPost } from '../../models/reddit.models';
     }
 
     .icon-btn {
-      padding: 6px;
+      padding: 8px;
       border: none;
       background: transparent;
       cursor: pointer;
       border-radius: 4px;
       color: #605e5c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .icon-btn:hover {
-      background-color: #f3f2f1;
+    .icon-btn:hover:not(:disabled) {
+      background-color: #edebe9;
+    }
+
+    .icon-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .mail-tabs {
+      display: flex;
+      border-bottom: 1px solid #edebe9;
+      background: #faf9f8;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 14px;
+      color: #605e5c;
+      position: relative;
+    }
+
+    .tab.active {
+      color: #0078d4;
+      font-weight: 600;
+    }
+
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 16px;
+      right: 16px;
+      height: 2px;
+      background-color: #0078d4;
+    }
+
+    .tab:hover:not(.active) {
+      background-color: #edebe9;
     }
 
     .mail-items {
       flex: 1;
       overflow-y: auto;
+      background-color: #ffffff;
     }
 
     .mail-item {
-      padding: 12px 16px;
-      border-bottom: 1px solid #edebe9;
+      padding: 12px 12px 12px 8px;
+      border-bottom: 1px solid #f3f2f1;
       cursor: pointer;
       display: flex;
-      gap: 12px;
+      align-items: flex-start;
+      gap: 8px;
       transition: background-color 0.1s;
+      position: relative;
     }
 
     .mail-item:hover {
@@ -148,14 +253,37 @@ import { RedditPost } from '../../models/reddit.models';
     }
 
     .mail-item.selected {
-      background-color: #deecf9;
+      background-color: #e1dfdd;
+    }
+
+    .mail-item.important {
+      border-left: 3px solid #d13438;
+      padding-left: 5px;
+    }
+
+    .mail-checkbox {
+      opacity: 0;
+      transition: opacity 0.1s;
+      padding-top: 2px;
+    }
+
+    .mail-item:hover .mail-checkbox {
+      opacity: 1;
+    }
+
+    .mail-checkbox input {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
     }
 
     .mail-indicator {
       width: 4px;
+      min-height: 40px;
       border-radius: 2px;
       flex-shrink: 0;
       background-color: transparent;
+      align-self: stretch;
     }
 
     .mail-indicator.unread {
@@ -167,74 +295,141 @@ import { RedditPost } from '../../models/reddit.models';
       min-width: 0;
     }
 
-    .mail-header {
+    .mail-row-1 {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 4px;
+      gap: 6px;
+      margin-bottom: 2px;
     }
 
     .sender {
       font-size: 14px;
-      font-weight: 600;
       color: #323130;
+      flex-shrink: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .unread .sender {
+    .sender.unread {
+      font-weight: 600;
       color: #0078d4;
+    }
+
+    .mail-icons {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .attachment-icon {
+      fill: #605e5c;
+    }
+
+    .important-icon {
+      fill: #d13438;
     }
 
     .date {
       font-size: 12px;
       color: #605e5c;
       flex-shrink: 0;
+      margin-left: auto;
     }
 
-    .mail-subject {
+    .mail-row-2 {
+      margin-bottom: 2px;
+    }
+
+    .subject {
       font-size: 14px;
       color: #323130;
-      margin-bottom: 4px;
+      display: block;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .unread .mail-subject {
+    .subject.unread {
       font-weight: 600;
     }
 
-    .mail-preview {
+    .mail-row-3 {
+      display: flex;
+      gap: 6px;
       font-size: 13px;
       color: #605e5c;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
     }
 
-    .subreddit-tag {
+    .folder-tag {
       color: #0078d4;
       font-weight: 500;
+      flex-shrink: 0;
     }
 
-    .mail-stats {
-      display: flex;
-      gap: 12px;
-      margin-top: 6px;
+    .preview {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .stat {
+    .mail-meta {
       display: flex;
+      gap: 6px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .type-badge {
+      display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-size: 12px;
+      font-size: 11px;
       color: #605e5c;
+      background: #f3f2f1;
+      padding: 2px 6px;
+      border-radius: 3px;
     }
 
-    .loading, .empty {
-      padding: 24px;
+    .type-badge svg {
+      fill: #605e5c;
+    }
+
+    .flair-badge {
+      font-size: 11px;
+      color: #0078d4;
+      background: #deecf9;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .loading, .empty, .loading-more {
+      padding: 32px 24px;
       text-align: center;
       color: #605e5c;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .loading-more {
+      padding: 16px;
+      flex-direction: row;
+      justify-content: center;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #edebe9;
+      border-top-color: #0078d4;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .empty p {
+      margin: 0;
     }
   `]
 })
@@ -244,6 +439,9 @@ export class MailListComponent implements OnChanges {
   posts: RedditPost[] = [];
   selectedPost: RedditPost | null = null;
   loading = false;
+  loadingMore = false;
+  currentAfter: string | undefined;
+  PostType = PostType;
 
   constructor(private redditService: RedditService) {
     this.redditService.selectedPost$.subscribe(post => {
@@ -253,6 +451,8 @@ export class MailListComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['currentSubreddit']) {
+      this.posts = [];
+      this.currentAfter = undefined;
       this.loadPosts();
     }
   }
@@ -260,8 +460,9 @@ export class MailListComponent implements OnChanges {
   loadPosts(): void {
     this.loading = true;
     this.redditService.getPosts(this.currentSubreddit, 25).subscribe({
-      next: (posts) => {
-        this.posts = posts;
+      next: (response) => {
+        this.posts = response.items;
+        this.currentAfter = response.after;
         this.loading = false;
       },
       error: (err) => {
@@ -271,7 +472,37 @@ export class MailListComponent implements OnChanges {
     });
   }
 
+  loadMore(): void {
+    if (this.loadingMore || !this.currentAfter) return;
+
+    this.loadingMore = true;
+    this.redditService.getPosts(this.currentSubreddit, 25, this.currentAfter).subscribe({
+      next: (response) => {
+        this.posts = [...this.posts, ...response.items];
+        this.currentAfter = response.after;
+        this.loadingMore = false;
+      },
+      error: (err) => {
+        console.error('Error loading more posts', err);
+        this.loadingMore = false;
+      }
+    });
+  }
+
+  onScroll(event: Event): void {
+    const element = event.target as HTMLElement;
+    const threshold = 200;
+    const position = element.scrollTop + element.clientHeight;
+    const height = element.scrollHeight;
+
+    if (position > height - threshold && this.currentAfter && !this.loadingMore) {
+      this.loadMore();
+    }
+  }
+
   refresh(): void {
+    this.posts = [];
+    this.currentAfter = undefined;
     this.loadPosts();
   }
 
@@ -283,19 +514,48 @@ export class MailListComponent implements OnChanges {
     return this.redditService.isRead(postId);
   }
 
+  trackByPostId(index: number, post: RedditPost): string {
+    return post.id;
+  }
+
+  getFolderName(): string {
+    if (this.currentSubreddit === 'all') return 'Inbox';
+    if (this.currentSubreddit === 'popular') return 'Popular';
+    return `r/${this.currentSubreddit}`;
+  }
+
+  getPreviewText(post: RedditPost): string {
+    if (post.selfText) {
+      return post.selfText.substring(0, 120);
+    }
+    if (post.domain) {
+      return post.domain;
+    }
+    return '';
+  }
+
+  getTypeLabel(type: PostType): string {
+    switch (type) {
+      case PostType.Image: return 'Image';
+      case PostType.Video: return 'Video';
+      case PostType.Link: return 'Link';
+      case PostType.Gallery: return 'Gallery';
+      default: return '';
+    }
+  }
+
   formatDate(dateStr: string): string {
     const date = new Date(dateStr);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffHours < 1) {
-      const diffMins = Math.floor(diffMs / (1000 * 60));
-      return `${diffMins}m ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h ago`;
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 7) return date.toLocaleDateString('en-US', { weekday: 'short' });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 }

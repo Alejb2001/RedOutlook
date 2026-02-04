@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Web;
 using OfficeReddit.Models;
 
 namespace OfficeReddit.Services;
@@ -8,20 +9,36 @@ public class RedditService : IRedditService
     private readonly HttpClient _httpClient;
     private readonly ILogger<RedditService> _logger;
 
+    // Extensiones de imagen comunes
+    private static readonly string[] ImageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+    private static readonly string[] VideoExtensions = { ".mp4", ".webm", ".gifv" };
+    private static readonly string[] ImageDomains = { "i.redd.it", "i.imgur.com", "imgur.com" };
+
     public RedditService(HttpClient httpClient, ILogger<RedditService> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
     }
 
-    public async Task<List<RedditPost>> GetPostsAsync(string subreddit = "all", int limit = 25, string? after = null)
+    public async Task<PaginatedResponse<RedditPost>> GetPostsAsync(
+        string subreddit = "all",
+        int limit = 25,
+        string? after = null,
+        string? before = null)
     {
         try
         {
-            var url = $"r/{subreddit}.json?limit={limit}";
+            // Pedir más posts para compensar los que se filtran por NSFW
+            var requestLimit = Math.Min(limit + 10, 100);
+            var url = $"r/{subreddit}.json?limit={requestLimit}&raw_json=1";
+
             if (!string.IsNullOrEmpty(after))
             {
                 url += $"&after={after}";
+            }
+            if (!string.IsNullOrEmpty(before))
+            {
+                url += $"&before={before}";
             }
 
             var response = await _httpClient.GetAsync(url);
@@ -32,18 +49,27 @@ public class RedditService : IRedditService
 
             if (apiResponse?.Data?.Children == null)
             {
-                return new List<RedditPost>();
+                return new PaginatedResponse<RedditPost>();
             }
 
-            return apiResponse.Data.Children
-                .Where(c => c.Data != null)
+            // Filtrar NSFW y mapear
+            var posts = apiResponse.Data.Children
+                .Where(c => c.Data != null && !c.Data.IsNsfw) // Filtro SFW
+                .Take(limit)
                 .Select(c => MapToRedditPost(c.Data!))
                 .ToList();
+
+            return new PaginatedResponse<RedditPost>
+            {
+                Items = posts,
+                After = apiResponse.Data.After,
+                Before = apiResponse.Data.Before
+            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching posts from r/{Subreddit}", subreddit);
-            return new List<RedditPost>();
+            return new PaginatedResponse<RedditPost>();
         }
     }
 
@@ -51,7 +77,7 @@ public class RedditService : IRedditService
     {
         try
         {
-            var url = $"r/{subreddit}/comments/{postId}.json";
+            var url = $"r/{subreddit}/comments/{postId}.json?raw_json=1";
             var response = await _httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
 
@@ -63,18 +89,42 @@ public class RedditService : IRedditService
                 .GetProperty("children")[0]
                 .GetProperty("data");
 
+            // Verificar si es NSFW
+            if (postData.TryGetProperty("over_18", out var nsfw) && nsfw.GetBoolean())
+            {
+                _logger.LogWarning("Attempted to access NSFW post {PostId}", postId);
+                return null;
+            }
+
+            var selfText = postData.GetProperty("selftext").GetString() ?? string.Empty;
+            var selfTextHtml = postData.TryGetProperty("selftext_html", out var html)
+                ? HttpUtility.HtmlDecode(html.GetString())
+                : null;
+
+            var postUrl = postData.GetProperty("url").GetString() ?? string.Empty;
+            var isSelf = postData.TryGetProperty("is_self", out var isSelfProp) && isSelfProp.GetBoolean();
+            var postHint = postData.TryGetProperty("post_hint", out var hint) ? hint.GetString() : null;
+            var domain = postData.TryGetProperty("domain", out var dom) ? dom.GetString() : null;
+
             return new RedditPost
             {
                 Id = postData.GetProperty("id").GetString() ?? string.Empty,
                 Title = postData.GetProperty("title").GetString() ?? string.Empty,
                 Author = postData.GetProperty("author").GetString() ?? string.Empty,
                 Subreddit = postData.GetProperty("subreddit").GetString() ?? string.Empty,
-                SelfText = postData.GetProperty("selftext").GetString() ?? string.Empty,
-                Url = postData.GetProperty("url").GetString() ?? string.Empty,
+                SelfText = selfText,
+                SelfTextHtml = selfTextHtml,
+                Url = postUrl,
                 Permalink = postData.GetProperty("permalink").GetString() ?? string.Empty,
                 Score = postData.GetProperty("score").GetInt32(),
                 NumComments = postData.GetProperty("num_comments").GetInt32(),
-                CreatedUtc = DateTimeOffset.FromUnixTimeSeconds((long)postData.GetProperty("created_utc").GetDouble()).UtcDateTime
+                CreatedUtc = DateTimeOffset.FromUnixTimeSeconds((long)postData.GetProperty("created_utc").GetDouble()).UtcDateTime,
+                Type = DeterminePostType(isSelf, postHint, postUrl, domain),
+                HasAttachment = !isSelf && !string.IsNullOrEmpty(postUrl),
+                Domain = domain,
+                Flair = postData.TryGetProperty("link_flair_text", out var flair) ? flair.GetString() : null,
+                IsImportant = (postData.TryGetProperty("stickied", out var stickied) && stickied.GetBoolean()) ||
+                             (postData.TryGetProperty("distinguished", out var dist) && !string.IsNullOrEmpty(dist.GetString()))
             };
         }
         catch (Exception ex)
@@ -102,12 +152,18 @@ public class RedditService : IRedditService
             foreach (var child in children.EnumerateArray())
             {
                 var data = child.GetProperty("data");
+
+                // Filtrar subreddits NSFW
+                if (data.TryGetProperty("over18", out var nsfw) && nsfw.GetBoolean())
+                    continue;
+
                 subreddits.Add(new SubredditInfo
                 {
                     Name = data.GetProperty("name").GetString() ?? string.Empty,
                     DisplayName = data.GetProperty("display_name").GetString() ?? string.Empty,
                     Subscribers = data.GetProperty("subscribers").GetInt32(),
-                    Icon = data.TryGetProperty("icon_img", out var icon) ? icon.GetString() ?? string.Empty : string.Empty
+                    Icon = data.TryGetProperty("icon_img", out var icon) ? icon.GetString() ?? string.Empty : string.Empty,
+                    Description = data.TryGetProperty("public_description", out var desc) ? desc.GetString() : null
                 });
             }
 
@@ -120,8 +176,12 @@ public class RedditService : IRedditService
         }
     }
 
-    private static RedditPost MapToRedditPost(RedditPostData data)
+    private RedditPost MapToRedditPost(RedditPostData data)
     {
+        var selfTextHtml = !string.IsNullOrEmpty(data.SelfTextHtml)
+            ? HttpUtility.HtmlDecode(data.SelfTextHtml)
+            : null;
+
         return new RedditPost
         {
             Id = data.Id,
@@ -129,12 +189,54 @@ public class RedditService : IRedditService
             Author = data.Author,
             Subreddit = data.Subreddit,
             SelfText = data.SelfText,
+            SelfTextHtml = selfTextHtml,
             Url = data.Url,
             Permalink = data.Permalink,
             Score = data.Score,
             NumComments = data.NumComments,
             CreatedUtc = DateTimeOffset.FromUnixTimeSeconds((long)data.CreatedUtc).UtcDateTime,
-            Thumbnail = data.Thumbnail ?? string.Empty
+            Thumbnail = data.Thumbnail ?? string.Empty,
+            Type = DeterminePostType(data.IsSelf, data.PostHint, data.Url, data.Domain),
+            HasAttachment = !data.IsSelf && !string.IsNullOrEmpty(data.Url),
+            Domain = data.Domain,
+            Flair = data.Flair,
+            IsImportant = data.IsStickied || !string.IsNullOrEmpty(data.Distinguished)
         };
+    }
+
+    private static PostType DeterminePostType(bool isSelf, string? postHint, string url, string? domain)
+    {
+        if (isSelf || string.IsNullOrEmpty(url))
+            return PostType.Text;
+
+        // Usar post_hint si está disponible
+        if (!string.IsNullOrEmpty(postHint))
+        {
+            return postHint switch
+            {
+                "image" => PostType.Image,
+                "hosted:video" or "rich:video" => PostType.Video,
+                "link" => PostType.Link,
+                _ => PostType.Link
+            };
+        }
+
+        // Detectar por extensión o dominio
+        var lowerUrl = url.ToLowerInvariant();
+
+        if (ImageExtensions.Any(ext => lowerUrl.EndsWith(ext)) ||
+            ImageDomains.Any(d => domain?.Contains(d) == true))
+            return PostType.Image;
+
+        if (VideoExtensions.Any(ext => lowerUrl.EndsWith(ext)) ||
+            domain?.Contains("v.redd.it") == true ||
+            domain?.Contains("youtube.com") == true ||
+            domain?.Contains("youtu.be") == true)
+            return PostType.Video;
+
+        if (lowerUrl.Contains("/gallery/"))
+            return PostType.Gallery;
+
+        return PostType.Link;
     }
 }

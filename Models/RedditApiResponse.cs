@@ -43,6 +43,9 @@ public class RedditPostData
     [JsonPropertyName("selftext")]
     public string SelfText { get; set; } = string.Empty;
 
+    [JsonPropertyName("selftext_html")]
+    public string? SelfTextHtml { get; set; }
+
     [JsonPropertyName("url")]
     public string Url { get; set; } = string.Empty;
 
@@ -60,4 +63,34 @@ public class RedditPostData
 
     [JsonPropertyName("thumbnail")]
     public string? Thumbnail { get; set; }
+
+    [JsonPropertyName("over_18")]
+    public bool IsNsfw { get; set; }
+
+    [JsonPropertyName("is_self")]
+    public bool IsSelf { get; set; }
+
+    [JsonPropertyName("post_hint")]
+    public string? PostHint { get; set; }
+
+    [JsonPropertyName("domain")]
+    public string? Domain { get; set; }
+
+    [JsonPropertyName("link_flair_text")]
+    public string? Flair { get; set; }
+
+    [JsonPropertyName("stickied")]
+    public bool IsStickied { get; set; }
+
+    [JsonPropertyName("distinguished")]
+    public string? Distinguished { get; set; }
+}
+
+// Respuesta paginada para el frontend
+public class PaginatedResponse<T>
+{
+    public List<T> Items { get; set; } = new();
+    public string? After { get; set; }
+    public string? Before { get; set; }
+    public bool HasMore => !string.IsNullOrEmpty(After);
 }
