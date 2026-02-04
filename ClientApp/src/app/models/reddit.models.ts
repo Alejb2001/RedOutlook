@@ -27,6 +27,16 @@ export enum PostType {
   Gallery = 4
 }
 
+export interface RedditComment {
+  id: string;
+  author: string;
+  body: string;
+  bodyHtml?: string;
+  score: number;
+  createdUtc: string;
+  replies: RedditComment[];
+}
+
 export interface SubredditInfo {
   name: string;
   displayName: string;

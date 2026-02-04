@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { RedditPost, SubredditInfo, PaginatedResponse } from '../models/reddit.models';
+import { RedditPost, RedditComment, SubredditInfo, PaginatedResponse } from '../models/reddit.models';
 
 @Injectable({
   providedIn: 'root'
@@ -57,6 +57,11 @@ export class RedditService {
   getPopularSubreddits(limit: number = 15): Observable<SubredditInfo[]> {
     const params = new HttpParams().set('limit', limit.toString());
     return this.http.get<SubredditInfo[]>(`${this.apiUrl}/subreddits/popular`, { params });
+  }
+
+  getComments(subreddit: string, postId: string, limit: number = 50): Observable<RedditComment[]> {
+    const params = new HttpParams().set('limit', limit.toString());
+    return this.http.get<RedditComment[]>(`${this.apiUrl}/posts/${subreddit}/${postId}/comments`, { params });
   }
 
   selectPost(post: RedditPost): void {

@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RedditService } from '../../services/reddit.service';
-import { RedditPost, PostType } from '../../models/reddit.models';
+import { RedditPost, RedditComment, PostType } from '../../models/reddit.models';
 
 @Component({
   selector: 'app-reading-pane',
@@ -166,8 +166,48 @@ import { RedditPost, PostType } from '../../models/reddit.models';
               </svg>
             </a>
           </div>
+
+          <!-- Comments Section -->
+          <div class="comments-section" *ngIf="selectedPost.numComments > 0">
+            <div class="comments-header">
+              <h3>Comments</h3>
+              <span class="comments-loading" *ngIf="loadingComments">Loading...</span>
+            </div>
+
+            <div class="comments-list" *ngIf="!loadingComments">
+              <ng-container *ngFor="let comment of comments">
+                <ng-container *ngTemplateOutlet="commentTemplate; context: { comment: comment, depth: 0 }"></ng-container>
+              </ng-container>
+
+              <div class="no-comments" *ngIf="comments.length === 0 && !loadingComments">
+                No comments to display
+              </div>
+            </div>
+          </div>
         </div>
       </ng-container>
+
+      <!-- Comment Template (recursive) -->
+      <ng-template #commentTemplate let-comment="comment" let-depth="depth">
+        <div class="comment" [style.marginLeft.px]="depth * 16">
+          <div class="comment-thread-line" *ngIf="depth > 0"></div>
+          <div class="comment-content">
+            <div class="comment-header">
+              <span class="comment-author">{{ comment.author }}</span>
+              <span class="comment-score">{{ formatNumber(comment.score) }} points</span>
+              <span class="comment-time">{{ formatRelativeTime(comment.createdUtc) }}</span>
+            </div>
+            <div class="comment-body" *ngIf="comment.bodyHtml" [innerHTML]="getSafeHtml(comment.bodyHtml)"></div>
+            <div class="comment-body" *ngIf="!comment.bodyHtml">{{ comment.body }}</div>
+          </div>
+        </div>
+        <!-- Nested replies -->
+        <ng-container *ngIf="comment.replies && comment.replies.length > 0">
+          <ng-container *ngFor="let reply of comment.replies">
+            <ng-container *ngTemplateOutlet="commentTemplate; context: { comment: reply, depth: depth + 1 }"></ng-container>
+          </ng-container>
+        </ng-container>
+      </ng-template>
 
       <ng-template #emptyState>
         <div class="empty-state">
@@ -550,10 +590,144 @@ import { RedditPost, PostType } from '../../models/reddit.models';
       font-size: 14px;
       margin: 0;
     }
+
+    /* Comments Section */
+    .comments-section {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #edebe9;
+    }
+
+    .comments-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .comments-header h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #242424;
+      margin: 0;
+    }
+
+    .comments-loading {
+      font-size: 12px;
+      color: #616161;
+    }
+
+    .comments-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .comment {
+      position: relative;
+      display: flex;
+      padding: 8px 0;
+    }
+
+    .comment-thread-line {
+      position: absolute;
+      left: -12px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background-color: #edebe9;
+      cursor: pointer;
+    }
+
+    .comment-thread-line:hover {
+      background-color: #0f6cbd;
+    }
+
+    .comment-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .comment-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      flex-wrap: wrap;
+    }
+
+    .comment-author {
+      font-size: 12px;
+      font-weight: 600;
+      color: #0f6cbd;
+    }
+
+    .comment-score {
+      font-size: 11px;
+      color: #616161;
+    }
+
+    .comment-time {
+      font-size: 11px;
+      color: #8a8886;
+    }
+
+    .comment-body {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #242424;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .comment-body ::ng-deep a {
+      color: #0f6cbd;
+    }
+
+    .comment-body ::ng-deep p {
+      margin: 0 0 8px 0;
+    }
+
+    .comment-body ::ng-deep p:last-child {
+      margin-bottom: 0;
+    }
+
+    .comment-body ::ng-deep blockquote {
+      border-left: 3px solid #0f6cbd;
+      margin: 8px 0;
+      padding: 4px 12px;
+      background: #faf9f8;
+      color: #616161;
+    }
+
+    .comment-body ::ng-deep pre,
+    .comment-body ::ng-deep code {
+      background: #faf9f8;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+    }
+
+    .comment-body ::ng-deep pre {
+      padding: 8px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+
+    .comment-body ::ng-deep code {
+      padding: 2px 4px;
+      border-radius: 2px;
+    }
+
+    .no-comments {
+      font-size: 13px;
+      color: #616161;
+      padding: 16px 0;
+    }
   `]
 })
 export class ReadingPaneComponent {
   selectedPost: RedditPost | null = null;
+  comments: RedditComment[] = [];
+  loadingComments = false;
   PostType = PostType;
 
   // Colors for avatar
@@ -568,6 +742,24 @@ export class ReadingPaneComponent {
   ) {
     this.redditService.selectedPost$.subscribe(post => {
       this.selectedPost = post;
+      this.comments = [];
+      if (post && post.numComments > 0) {
+        this.loadComments(post);
+      }
+    });
+  }
+
+  private loadComments(post: RedditPost): void {
+    this.loadingComments = true;
+    this.redditService.getComments(post.subreddit, post.id).subscribe({
+      next: (comments) => {
+        this.comments = comments;
+        this.loadingComments = false;
+      },
+      error: (err) => {
+        console.error('Error loading comments', err);
+        this.loadingComments = false;
+      }
     });
   }
 
@@ -635,5 +827,27 @@ export class ReadingPaneComponent {
       minute: '2-digit',
       hour12: true
     });
+  }
+
+  formatRelativeTime(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffSecs < 60) {
+      return 'just now';
+    } else if (diffMins < 60) {
+      return `${diffMins}m ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours}h ago`;
+    } else if (diffDays < 7) {
+      return `${diffDays}d ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
   }
 }

@@ -62,4 +62,22 @@ public class RedditController : ControllerBase
         var subreddits = await _redditService.GetPopularSubredditsAsync(limit);
         return Ok(subreddits);
     }
+
+    /// <summary>
+    /// Obtiene los comentarios de un post
+    /// </summary>
+    [HttpGet("posts/{subreddit}/{postId}/comments")]
+    public async Task<ActionResult<List<RedditComment>>> GetComments(
+        string subreddit,
+        string postId,
+        [FromQuery] int limit = 50)
+    {
+        if (limit < 1 || limit > 100)
+        {
+            limit = 50;
+        }
+
+        var comments = await _redditService.GetCommentsAsync(subreddit, postId, limit);
+        return Ok(comments);
+    }
 }

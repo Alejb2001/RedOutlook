@@ -11,5 +11,6 @@ public interface IRedditService
         string? before = null);
 
     Task<RedditPost?> GetPostByIdAsync(string subreddit, string postId);
+    Task<List<RedditComment>> GetCommentsAsync(string subreddit, string postId, int limit = 50);
     Task<List<SubredditInfo>> GetPopularSubredditsAsync(int limit = 10);
 }

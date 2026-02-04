@@ -176,6 +176,100 @@ public class RedditService : IRedditService
         }
     }
 
+    public async Task<List<RedditComment>> GetCommentsAsync(string subreddit, string postId, int limit = 50)
+    {
+        try
+        {
+            var url = $"r/{subreddit}/comments/{postId}.json?raw_json=1&limit={limit}&depth=5";
+            var response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            using var document = JsonDocument.Parse(json);
+
+            // El segundo elemento del array contiene los comentarios
+            if (document.RootElement.GetArrayLength() < 2)
+                return new List<RedditComment>();
+
+            var commentsData = document.RootElement[1]
+                .GetProperty("data")
+                .GetProperty("children");
+
+            var comments = new List<RedditComment>();
+            foreach (var child in commentsData.EnumerateArray())
+            {
+                // Ignorar elementos "more" (cargar más comentarios)
+                if (child.GetProperty("kind").GetString() != "t1")
+                    continue;
+
+                var comment = ParseComment(child.GetProperty("data"));
+                if (comment != null)
+                    comments.Add(comment);
+            }
+
+            return comments;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching comments for post {PostId} in r/{Subreddit}", postId, subreddit);
+            return new List<RedditComment>();
+        }
+    }
+
+    private RedditComment? ParseComment(JsonElement data)
+    {
+        try
+        {
+            var author = data.GetProperty("author").GetString() ?? "[deleted]";
+            var body = data.GetProperty("body").GetString() ?? string.Empty;
+
+            // Ignorar comentarios eliminados
+            if (author == "[deleted]" && body == "[deleted]")
+                return null;
+
+            var bodyHtml = data.TryGetProperty("body_html", out var html)
+                ? HttpUtility.HtmlDecode(html.GetString())
+                : null;
+
+            var comment = new RedditComment
+            {
+                Id = data.GetProperty("id").GetString() ?? string.Empty,
+                Author = author,
+                Body = body,
+                BodyHtml = bodyHtml,
+                Score = data.TryGetProperty("score", out var score) ? score.GetInt32() : 0,
+                CreatedUtc = DateTimeOffset.FromUnixTimeSeconds(
+                    (long)data.GetProperty("created_utc").GetDouble()).UtcDateTime,
+                Replies = new List<RedditComment>()
+            };
+
+            // Parsear respuestas anidadas
+            if (data.TryGetProperty("replies", out var replies) &&
+                replies.ValueKind == JsonValueKind.Object)
+            {
+                if (replies.TryGetProperty("data", out var repliesData) &&
+                    repliesData.TryGetProperty("children", out var repliesChildren))
+                {
+                    foreach (var replyChild in repliesChildren.EnumerateArray())
+                    {
+                        if (replyChild.GetProperty("kind").GetString() != "t1")
+                            continue;
+
+                        var reply = ParseComment(replyChild.GetProperty("data"));
+                        if (reply != null)
+                            comment.Replies.Add(reply);
+                    }
+                }
+            }
+
+            return comment;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private RedditPost MapToRedditPost(RedditPostData data)
     {
         var selfTextHtml = !string.IsNullOrEmpty(data.SelfTextHtml)
