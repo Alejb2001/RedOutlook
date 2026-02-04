@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -8,10 +8,10 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="toolbar">
       <div class="toolbar-left">
-        <!-- Microsoft 365 App Launcher (Waffle) -->
-        <button class="toolbar-btn waffle-btn" title="Microsoft 365">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="white">
-            <path d="M2 2h4v4H2V2zm6 0h4v4H8V2zm-6 6h4v4H2V8zm6 0h4v4H8V8z" fill-opacity="0.9"/>
+        <!-- Toggle Sidebar Button -->
+        <button class="toolbar-btn toggle-sidebar-btn" title="Toggle sidebar" (click)="toggleSidebar()">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
+            <path d="M2 4.5A.5.5 0 0 1 2.5 4h15a.5.5 0 0 1 0 1h-15a.5.5 0 0 1-.5-.5zm0 5A.5.5 0 0 1 2.5 9h15a.5.5 0 0 1 0 1h-15a.5.5 0 0 1-.5-.5zm.5 4.5a.5.5 0 0 0 0 1h15a.5.5 0 0 0 0-1h-15z"/>
           </svg>
         </button>
 
@@ -193,7 +193,13 @@ import { CommonModule } from '@angular/common';
   `]
 })
 export class ToolbarComponent {
+  @Output() sidebarToggle = new EventEmitter<void>();
+
   focusSearch(): void {
     // Placeholder for search functionality
+  }
+
+  toggleSidebar(): void {
+    this.sidebarToggle.emit();
   }
 }

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
@@ -17,9 +17,12 @@ import { ReadingPaneComponent } from './components/reading-pane/reading-pane.com
   ],
   template: `
     <div class="app-container">
-      <app-toolbar></app-toolbar>
+      <app-toolbar (sidebarToggle)="onSidebarToggle()"></app-toolbar>
       <div class="app-content">
-        <app-sidebar (subredditChange)="onSubredditChange($event)"></app-sidebar>
+        <app-sidebar
+          *ngIf="sidebarVisible"
+          (subredditChange)="onSubredditChange($event)">
+        </app-sidebar>
         <app-mail-list [currentSubreddit]="currentSubreddit"></app-mail-list>
         <app-reading-pane></app-reading-pane>
       </div>
@@ -42,10 +45,25 @@ import { ReadingPaneComponent } from './components/reading-pane/reading-pane.com
     }
   `]
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   currentSubreddit = 'all';
+  sidebarVisible = true;
+
+  private readonly SIDEBAR_STORAGE_KEY = 'outlookReddit_sidebarVisible';
+
+  ngOnInit(): void {
+    const stored = localStorage.getItem(this.SIDEBAR_STORAGE_KEY);
+    if (stored !== null) {
+      this.sidebarVisible = stored === 'true';
+    }
+  }
 
   onSubredditChange(subreddit: string): void {
     this.currentSubreddit = subreddit;
+  }
+
+  onSidebarToggle(): void {
+    this.sidebarVisible = !this.sidebarVisible;
+    localStorage.setItem(this.SIDEBAR_STORAGE_KEY, String(this.sidebarVisible));
   }
 }
