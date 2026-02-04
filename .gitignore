@@ -1,23 +1,47 @@
+# .NET
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+*.suo
+*.cache
+*.pdb
+*.mdf
+*.ldf
+project.lock.json
+artifacts/
+
+# NuGet
+*.nupkg
+**/packages/*
+!**/packages/build/
+
 # Angular specific
-/dist/
-/out-tsc/
-/tmp/
-/coverage/
-/e2e/test-output/
-/.angular/
+ClientApp/dist/
+ClientApp/out-tsc/
+ClientApp/tmp/
+ClientApp/coverage/
+ClientApp/e2e/test-output/
+ClientApp/.angular/
 .angular/
 
 # Node modules and dependency files
-/node_modules/
-/package-lock.json
-/yarn.lock
+ClientApp/node_modules/
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # Environment files
-/.env
+.env
+.env.*
+*.local
 
 # Angular CLI and build artefacts
-/.angular-cli.json
-/.ng/
+.angular-cli.json
+.ng/
 
 # TypeScript cache
 *.tsbuildinfo
@@ -26,3 +50,29 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
+
+# IDE
+.idea/
+*.swp
+*.swo
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# wwwroot (built files)
+wwwroot/
+
+# appsettings secrets
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+
+# Claude Code
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db
