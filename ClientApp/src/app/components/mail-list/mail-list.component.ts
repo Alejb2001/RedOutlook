@@ -1,6 +1,8 @@
-import { Component, Input, OnChanges, SimpleChanges, HostListener } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { RedditService } from '../../services/reddit.service';
+import { SettingsService, AppSettings } from '../../services/settings.service';
 import { RedditPost, PostType } from '../../models/reddit.models';
 
 @Component({
@@ -30,7 +32,7 @@ import { RedditPost, PostType } from '../../models/reddit.models';
       </div>
 
       <!-- Sort Tabs -->
-      <div class="mail-tabs">
+      <div class="mail-tabs" *ngIf="settings.showSortTabs">
         <button
           *ngFor="let sort of sortOptions"
           class="tab"
@@ -448,7 +450,7 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     }
   `]
 })
-export class MailListComponent implements OnChanges {
+export class MailListComponent implements OnChanges, OnDestroy {
   @Input() currentSubreddit = 'all';
 
   posts: RedditPost[] = [];
@@ -458,6 +460,9 @@ export class MailListComponent implements OnChanges {
   currentAfter: string | undefined;
   currentSort = 'hot';
   PostType = PostType;
+  settings: AppSettings;
+
+  private settingsSubscription: Subscription;
 
   sortOptions = [
     { label: 'Hot', value: 'hot' },
@@ -466,10 +471,21 @@ export class MailListComponent implements OnChanges {
     { label: 'Rising', value: 'rising' }
   ];
 
-  constructor(private redditService: RedditService) {
+  constructor(
+    private redditService: RedditService,
+    private settingsService: SettingsService
+  ) {
+    this.settings = this.settingsService.settings;
+    this.settingsSubscription = this.settingsService.settings$.subscribe(s => {
+      this.settings = s;
+    });
     this.redditService.selectedPost$.subscribe(post => {
       this.selectedPost = post;
     });
+  }
+
+  ngOnDestroy(): void {
+    this.settingsSubscription.unsubscribe();
   }
 
   ngOnChanges(changes: SimpleChanges): void {

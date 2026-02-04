@@ -1,5 +1,6 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SettingsService, AppSettings } from '../../services/settings.service';
 
 @Component({
   selector: 'app-toolbar',
@@ -36,11 +37,26 @@ import { CommonModule } from '@angular/common';
 
       <div class="toolbar-right">
         <!-- Settings (Gear) -->
-        <button class="toolbar-btn" title="Settings">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
-            <path d="M1.91 7.38A8.5 8.5 0 0 1 3.7 4.3l.16.08 1.04.47.9-.57c.41-.26.84-.48 1.3-.66L7.5 3.4V2.25c0-.41.34-.75.75-.75h1.5c.41 0 .75.34.75.75V3.4l.4.22c.46.18.89.4 1.3.66l.9.57 1.04-.47.16-.08a8.5 8.5 0 0 1 1.79 3.08l-.13.12-.84.75v1.06l.02.52.82.74.13.12a8.5 8.5 0 0 1-1.79 3.08l-.16-.08-1.04-.47-.9.57c-.41.26-.84.48-1.3.66l-.4.22v1.15c0 .41-.34.75-.75.75h-1.5a.75.75 0 0 1-.75-.75v-1.15l-.4-.22a5.5 5.5 0 0 1-1.3-.66l-.9-.57-1.04.47-.16.08a8.5 8.5 0 0 1-1.79-3.08l.13-.12.84-.74.02-.53v-1.05l-.84-.75-.13-.12zM10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
-          </svg>
-        </button>
+        <div class="settings-container">
+          <button class="toolbar-btn" title="Settings" (click)="toggleSettingsMenu($event)">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
+              <path d="M1.91 7.38A8.5 8.5 0 0 1 3.7 4.3l.16.08 1.04.47.9-.57c.41-.26.84-.48 1.3-.66L7.5 3.4V2.25c0-.41.34-.75.75-.75h1.5c.41 0 .75.34.75.75V3.4l.4.22c.46.18.89.4 1.3.66l.9.57 1.04-.47.16-.08a8.5 8.5 0 0 1 1.79 3.08l-.13.12-.84.75v1.06l.02.52.82.74.13.12a8.5 8.5 0 0 1-1.79 3.08l-.16-.08-1.04-.47-.9.57c-.41.26-.84.48-1.3.66l-.4.22v1.15c0 .41-.34.75-.75.75h-1.5a.75.75 0 0 1-.75-.75v-1.15l-.4-.22a5.5 5.5 0 0 1-1.3-.66l-.9-.57-1.04.47-.16.08a8.5 8.5 0 0 1-1.79-3.08l.13-.12.84-.74.02-.53v-1.05l-.84-.75-.13-.12zM10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+            </svg>
+          </button>
+
+          <!-- Settings Dropdown Menu -->
+          <div class="settings-menu" *ngIf="showSettingsMenu">
+            <div class="settings-menu-header">Settings</div>
+            <label class="settings-option">
+              <input type="checkbox" [checked]="settings.showSortTabs" (change)="toggleShowSortTabs()">
+              <span>Show sort filters (Hot, New, Top, Rising)</span>
+            </label>
+            <label class="settings-option">
+              <input type="checkbox" [checked]="settings.hideImages" (change)="toggleHideImages()">
+              <span>Hide images and GIFs</span>
+            </label>
+          </div>
+        </div>
 
         <!-- Help (Question mark) -->
         <button class="toolbar-btn" title="Help">
@@ -190,10 +206,77 @@ import { CommonModule } from '@angular/common';
       font-size: 12px;
       font-weight: 400;
     }
+
+    .settings-container {
+      position: relative;
+    }
+
+    .settings-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      min-width: 280px;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .settings-menu-header {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #242424;
+      border-bottom: 1px solid #edebe9;
+    }
+
+    .settings-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background-color 0.1s;
+    }
+
+    .settings-option:hover {
+      background-color: #f5f5f5;
+    }
+
+    .settings-option input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #0f6cbd;
+      flex-shrink: 0;
+    }
+
+    .settings-option span {
+      font-size: 14px;
+      color: #242424;
+    }
   `]
 })
 export class ToolbarComponent {
   @Output() sidebarToggle = new EventEmitter<void>();
+
+  showSettingsMenu = false;
+  settings: AppSettings;
+
+  constructor(private settingsService: SettingsService) {
+    this.settings = this.settingsService.settings;
+    this.settingsService.settings$.subscribe(s => this.settings = s);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.settings-container')) {
+      this.showSettingsMenu = false;
+    }
+  }
 
   focusSearch(): void {
     // Placeholder for search functionality
@@ -201,5 +284,18 @@ export class ToolbarComponent {
 
   toggleSidebar(): void {
     this.sidebarToggle.emit();
+  }
+
+  toggleSettingsMenu(event: Event): void {
+    event.stopPropagation();
+    this.showSettingsMenu = !this.showSettingsMenu;
+  }
+
+  toggleShowSortTabs(): void {
+    this.settingsService.toggleShowSortTabs();
+  }
+
+  toggleHideImages(): void {
+    this.settingsService.toggleHideImages();
   }
 }

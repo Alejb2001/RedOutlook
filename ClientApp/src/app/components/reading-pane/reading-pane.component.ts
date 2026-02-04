@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Subscription } from 'rxjs';
 import { RedditService } from '../../services/reddit.service';
+import { SettingsService, AppSettings } from '../../services/settings.service';
 import { RedditPost, RedditComment, PostType } from '../../models/reddit.models';
 
 @Component({
@@ -125,7 +127,8 @@ import { RedditPost, RedditComment, PostType } from '../../models/reddit.models'
 
             <!-- Image post -->
             <div *ngIf="selectedPost.type === PostType.Image && selectedPost.url" class="media-content">
-              <img [src]="selectedPost.url" alt="Post image" class="post-image" loading="lazy">
+              <img *ngIf="!settings.hideImages" [src]="selectedPost.url" alt="Post image" class="post-image" loading="lazy">
+              <div *ngIf="settings.hideImages" class="image-placeholder">(imagen/gif)</div>
             </div>
 
             <!-- Link post (when no self text) -->
@@ -508,6 +511,17 @@ import { RedditPost, RedditComment, PostType } from '../../models/reddit.models'
       border: 1px solid #edebe9;
     }
 
+    .image-placeholder {
+      padding: 16px 24px;
+      background: #faf9f8;
+      border: 1px dashed #d2d0ce;
+      border-radius: 4px;
+      color: #616161;
+      font-size: 14px;
+      font-style: italic;
+      display: inline-block;
+    }
+
     .link-content {
       margin: 16px 0;
     }
@@ -791,13 +805,15 @@ import { RedditPost, RedditComment, PostType } from '../../models/reddit.models'
     }
   `]
 })
-export class ReadingPaneComponent {
+export class ReadingPaneComponent implements OnDestroy {
   selectedPost: RedditPost | null = null;
   comments: RedditComment[] = [];
   loadingComments = false;
   collapsedComments = new Set<string>();
   commentSort = 'best';
   PostType = PostType;
+  settings: AppSettings;
+  private settingsSubscription: Subscription;
 
   commentSortOptions = [
     { label: 'Best', value: 'best' },
@@ -816,8 +832,12 @@ export class ReadingPaneComponent {
 
   constructor(
     private redditService: RedditService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private settingsService: SettingsService
   ) {
+    this.settings = this.settingsService.settings;
+    this.settingsSubscription = this.settingsService.settings$.subscribe(s => this.settings = s);
+
     this.redditService.selectedPost$.subscribe(post => {
       this.selectedPost = post;
       this.comments = [];
@@ -841,6 +861,10 @@ export class ReadingPaneComponent {
         this.loadingComments = false;
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.settingsSubscription.unsubscribe();
   }
 
   onCommentSortChange(): void {
