@@ -23,14 +23,15 @@ public class RedditController : ControllerBase
         [FromQuery] string subreddit = "all",
         [FromQuery] int limit = 25,
         [FromQuery] string? after = null,
-        [FromQuery] string? before = null)
+        [FromQuery] string? before = null,
+        [FromQuery] string sort = "hot")
     {
         if (limit < 1 || limit > 100)
         {
             limit = 25;
         }
 
-        var response = await _redditService.GetPostsAsync(subreddit, limit, after, before);
+        var response = await _redditService.GetPostsAsync(subreddit, limit, after, before, sort);
         return Ok(response);
     }
 
@@ -70,14 +71,15 @@ public class RedditController : ControllerBase
     public async Task<ActionResult<List<RedditComment>>> GetComments(
         string subreddit,
         string postId,
-        [FromQuery] int limit = 50)
+        [FromQuery] int limit = 50,
+        [FromQuery] string sort = "best")
     {
         if (limit < 1 || limit > 100)
         {
             limit = 50;
         }
 
-        var comments = await _redditService.GetCommentsAsync(subreddit, postId, limit);
+        var comments = await _redditService.GetCommentsAsync(subreddit, postId, limit, sort);
         return Ok(comments);
     }
 }

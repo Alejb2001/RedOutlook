@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RedditService } from '../../services/reddit.service';
 import { RedditPost, RedditComment, PostType } from '../../models/reddit.models';
@@ -7,7 +8,7 @@ import { RedditPost, RedditComment, PostType } from '../../models/reddit.models'
 @Component({
   selector: 'app-reading-pane',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="reading-pane">
       <ng-container *ngIf="selectedPost; else emptyState">
@@ -171,6 +172,12 @@ import { RedditPost, RedditComment, PostType } from '../../models/reddit.models'
           <div class="comments-section" *ngIf="selectedPost.numComments > 0">
             <div class="comments-header">
               <h3>Comments</h3>
+              <div class="comments-sort">
+                <span class="sort-label">Sort by:</span>
+                <select [(ngModel)]="commentSort" (change)="onCommentSortChange()" class="sort-select">
+                  <option *ngFor="let opt of commentSortOptions" [value]="opt.value">{{ opt.label }}</option>
+                </select>
+              </div>
               <span class="comments-loading" *ngIf="loadingComments">Loading...</span>
             </div>
 
@@ -620,6 +627,39 @@ import { RedditPost, RedditComment, PostType } from '../../models/reddit.models'
       margin: 0;
     }
 
+    .comments-sort {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+    }
+
+    .sort-label {
+      font-size: 12px;
+      color: #616161;
+    }
+
+    .sort-select {
+      padding: 4px 8px;
+      font-size: 12px;
+      border: 1px solid #d2d0ce;
+      border-radius: 4px;
+      background: #ffffff;
+      color: #242424;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .sort-select:hover {
+      border-color: #0f6cbd;
+    }
+
+    .sort-select:focus {
+      outline: none;
+      border-color: #0f6cbd;
+      box-shadow: 0 0 0 1px #0f6cbd;
+    }
+
     .comments-loading {
       font-size: 12px;
       color: #616161;
@@ -756,7 +796,17 @@ export class ReadingPaneComponent {
   comments: RedditComment[] = [];
   loadingComments = false;
   collapsedComments = new Set<string>();
+  commentSort = 'best';
   PostType = PostType;
+
+  commentSortOptions = [
+    { label: 'Best', value: 'best' },
+    { label: 'Top', value: 'top' },
+    { label: 'New', value: 'new' },
+    { label: 'Controversial', value: 'controversial' },
+    { label: 'Old', value: 'old' },
+    { label: 'Q&A', value: 'qa' }
+  ];
 
   // Colors for avatar
   private avatarColors = [
@@ -772,6 +822,7 @@ export class ReadingPaneComponent {
       this.selectedPost = post;
       this.comments = [];
       this.collapsedComments.clear();
+      this.commentSort = 'best';
       if (post && post.numComments > 0) {
         this.loadComments(post);
       }
@@ -780,7 +831,7 @@ export class ReadingPaneComponent {
 
   private loadComments(post: RedditPost): void {
     this.loadingComments = true;
-    this.redditService.getComments(post.subreddit, post.id).subscribe({
+    this.redditService.getComments(post.subreddit, post.id, 50, this.commentSort).subscribe({
       next: (comments) => {
         this.comments = comments;
         this.loadingComments = false;
@@ -790,6 +841,14 @@ export class ReadingPaneComponent {
         this.loadingComments = false;
       }
     });
+  }
+
+  onCommentSortChange(): void {
+    if (this.selectedPost) {
+      this.comments = [];
+      this.collapsedComments.clear();
+      this.loadComments(this.selectedPost);
+    }
   }
 
   toggleCollapse(commentId: string): void {

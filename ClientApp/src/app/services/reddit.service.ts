@@ -25,11 +25,13 @@ export class RedditService {
     subreddit: string = 'all',
     limit: number = 25,
     after?: string,
-    before?: string
+    before?: string,
+    sort: string = 'hot'
   ): Observable<PaginatedResponse<RedditPost>> {
     let params = new HttpParams()
       .set('subreddit', subreddit)
-      .set('limit', limit.toString());
+      .set('limit', limit.toString())
+      .set('sort', sort);
 
     if (after) {
       params = params.set('after', after);
@@ -59,8 +61,10 @@ export class RedditService {
     return this.http.get<SubredditInfo[]>(`${this.apiUrl}/subreddits/popular`, { params });
   }
 
-  getComments(subreddit: string, postId: string, limit: number = 50): Observable<RedditComment[]> {
-    const params = new HttpParams().set('limit', limit.toString());
+  getComments(subreddit: string, postId: string, limit: number = 50, sort: string = 'best'): Observable<RedditComment[]> {
+    const params = new HttpParams()
+      .set('limit', limit.toString())
+      .set('sort', sort);
     return this.http.get<RedditComment[]>(`${this.apiUrl}/posts/${subreddit}/${postId}/comments`, { params });
   }
 

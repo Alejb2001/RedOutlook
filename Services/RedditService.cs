@@ -24,13 +24,19 @@ public class RedditService : IRedditService
         string subreddit = "all",
         int limit = 25,
         string? after = null,
-        string? before = null)
+        string? before = null,
+        string sort = "hot")
     {
         try
         {
+            // Validar el ordenamiento
+            var validSorts = new[] { "hot", "new", "top", "rising" };
+            if (!validSorts.Contains(sort.ToLower()))
+                sort = "hot";
+
             // Pedir más posts para compensar los que se filtran por NSFW
             var requestLimit = Math.Min(limit + 10, 100);
-            var url = $"r/{subreddit}.json?limit={requestLimit}&raw_json=1";
+            var url = $"r/{subreddit}/{sort}.json?limit={requestLimit}&raw_json=1";
 
             if (!string.IsNullOrEmpty(after))
             {
@@ -176,11 +182,16 @@ public class RedditService : IRedditService
         }
     }
 
-    public async Task<List<RedditComment>> GetCommentsAsync(string subreddit, string postId, int limit = 50)
+    public async Task<List<RedditComment>> GetCommentsAsync(string subreddit, string postId, int limit = 50, string sort = "best")
     {
         try
         {
-            var url = $"r/{subreddit}/comments/{postId}.json?raw_json=1&limit={limit}&depth=5";
+            // Validar el ordenamiento
+            var validSorts = new[] { "best", "top", "new", "controversial", "old", "qa" };
+            if (!validSorts.Contains(sort.ToLower()))
+                sort = "best";
+
+            var url = $"r/{subreddit}/comments/{postId}.json?raw_json=1&limit={limit}&depth=5&sort={sort}";
             var response = await _httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
 

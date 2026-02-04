@@ -29,10 +29,15 @@ import { RedditPost, PostType } from '../../models/reddit.models';
         </div>
       </div>
 
-      <!-- Focused/Other Tabs -->
+      <!-- Sort Tabs -->
       <div class="mail-tabs">
-        <button class="tab active">Focused</button>
-        <button class="tab">Other</button>
+        <button
+          *ngFor="let sort of sortOptions"
+          class="tab"
+          [class.active]="currentSort === sort.value"
+          (click)="changeSort(sort.value)">
+          {{ sort.label }}
+        </button>
       </div>
 
       <!-- Mail Items -->
@@ -451,7 +456,15 @@ export class MailListComponent implements OnChanges {
   loading = false;
   loadingMore = false;
   currentAfter: string | undefined;
+  currentSort = 'hot';
   PostType = PostType;
+
+  sortOptions = [
+    { label: 'Hot', value: 'hot' },
+    { label: 'New', value: 'new' },
+    { label: 'Top', value: 'top' },
+    { label: 'Rising', value: 'rising' }
+  ];
 
   constructor(private redditService: RedditService) {
     this.redditService.selectedPost$.subscribe(post => {
@@ -469,7 +482,7 @@ export class MailListComponent implements OnChanges {
 
   loadPosts(): void {
     this.loading = true;
-    this.redditService.getPosts(this.currentSubreddit, 25).subscribe({
+    this.redditService.getPosts(this.currentSubreddit, 25, undefined, undefined, this.currentSort).subscribe({
       next: (response) => {
         this.posts = response.items;
         this.currentAfter = response.after;
@@ -486,7 +499,7 @@ export class MailListComponent implements OnChanges {
     if (this.loadingMore || !this.currentAfter) return;
 
     this.loadingMore = true;
-    this.redditService.getPosts(this.currentSubreddit, 25, this.currentAfter).subscribe({
+    this.redditService.getPosts(this.currentSubreddit, 25, this.currentAfter, undefined, this.currentSort).subscribe({
       next: (response) => {
         this.posts = [...this.posts, ...response.items];
         this.currentAfter = response.after;
@@ -497,6 +510,14 @@ export class MailListComponent implements OnChanges {
         this.loadingMore = false;
       }
     });
+  }
+
+  changeSort(sort: string): void {
+    if (this.currentSort === sort) return;
+    this.currentSort = sort;
+    this.posts = [];
+    this.currentAfter = undefined;
+    this.loadPosts();
   }
 
   onScroll(event: Event): void {
