@@ -22,7 +22,7 @@ RUN npm run build -- --configuration production
 
 # Build and publish .NET app
 WORKDIR /src
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet publish OfficeReddit.csproj -c Release -o /app/publish
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
