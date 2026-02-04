@@ -17,7 +17,7 @@ COPY . .
 
 # Build Angular app
 WORKDIR /src/ClientApp
-RUN npm ci
+RUN npm install
 RUN npm run build -- --configuration production
 
 # Build and publish .NET app
