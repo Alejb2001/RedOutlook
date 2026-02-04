@@ -31,4 +31,6 @@ app.MapControllers();
 // Fallback to index.html for SPA routing
 app.MapFallbackToFile("index.html");
 
-app.Run();
+// Use PORT environment variable for Railway/cloud hosting
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+app.Run($"http://0.0.0.0:{port}");
