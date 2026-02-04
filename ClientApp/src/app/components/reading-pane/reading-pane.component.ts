@@ -189,20 +189,28 @@ import { RedditPost, RedditComment, PostType } from '../../models/reddit.models'
 
       <!-- Comment Template (recursive) -->
       <ng-template #commentTemplate let-comment="comment" let-depth="depth">
-        <div class="comment" [style.marginLeft.px]="depth * 16">
-          <div class="comment-thread-line" *ngIf="depth > 0"></div>
+        <div class="comment" [style.marginLeft.px]="depth * 16" [class.collapsed]="isCollapsed(comment.id)">
+          <div class="comment-thread-line"
+               *ngIf="depth > 0"
+               (click)="toggleCollapse(comment.id)"
+               title="Click to collapse/expand"></div>
           <div class="comment-content">
             <div class="comment-header">
               <span class="comment-author">{{ comment.author }}</span>
               <span class="comment-score">{{ formatNumber(comment.score) }} points</span>
               <span class="comment-time">{{ formatRelativeTime(comment.createdUtc) }}</span>
+              <span class="collapsed-indicator" *ngIf="isCollapsed(comment.id)" (click)="toggleCollapse(comment.id)">
+                [+] {{ comment.replies?.length || 0 }} replies hidden
+              </span>
             </div>
-            <div class="comment-body" *ngIf="comment.bodyHtml" [innerHTML]="getSafeHtml(comment.bodyHtml)"></div>
-            <div class="comment-body" *ngIf="!comment.bodyHtml">{{ comment.body }}</div>
+            <ng-container *ngIf="!isCollapsed(comment.id)">
+              <div class="comment-body" *ngIf="comment.bodyHtml" [innerHTML]="getSafeHtml(comment.bodyHtml)"></div>
+              <div class="comment-body" *ngIf="!comment.bodyHtml">{{ comment.body }}</div>
+            </ng-container>
           </div>
         </div>
         <!-- Nested replies -->
-        <ng-container *ngIf="comment.replies && comment.replies.length > 0">
+        <ng-container *ngIf="comment.replies && comment.replies.length > 0 && !isCollapsed(comment.id)">
           <ng-container *ngFor="let reply of comment.replies">
             <ng-container *ngTemplateOutlet="commentTemplate; context: { comment: reply, depth: depth + 1 }"></ng-container>
           </ng-container>
@@ -722,12 +730,28 @@ import { RedditPost, RedditComment, PostType } from '../../models/reddit.models'
       color: #616161;
       padding: 16px 0;
     }
+
+    .comment.collapsed .comment-content {
+      opacity: 0.7;
+    }
+
+    .collapsed-indicator {
+      font-size: 11px;
+      color: #0f6cbd;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .collapsed-indicator:hover {
+      text-decoration: underline;
+    }
   `]
 })
 export class ReadingPaneComponent {
   selectedPost: RedditPost | null = null;
   comments: RedditComment[] = [];
   loadingComments = false;
+  collapsedComments = new Set<string>();
   PostType = PostType;
 
   // Colors for avatar
@@ -743,6 +767,7 @@ export class ReadingPaneComponent {
     this.redditService.selectedPost$.subscribe(post => {
       this.selectedPost = post;
       this.comments = [];
+      this.collapsedComments.clear();
       if (post && post.numComments > 0) {
         this.loadComments(post);
       }
@@ -761,6 +786,18 @@ export class ReadingPaneComponent {
         this.loadingComments = false;
       }
     });
+  }
+
+  toggleCollapse(commentId: string): void {
+    if (this.collapsedComments.has(commentId)) {
+      this.collapsedComments.delete(commentId);
+    } else {
+      this.collapsedComments.add(commentId);
+    }
+  }
+
+  isCollapsed(commentId: string): boolean {
+    return this.collapsedComments.has(commentId);
   }
 
   getSafeHtml(html: string): SafeHtml {
