@@ -638,16 +638,20 @@ import { RedditPost, RedditComment, PostType } from '../../models/reddit.models'
 
     .comment-thread-line {
       position: absolute;
-      left: -12px;
+      left: -14px;
       top: 0;
       bottom: 0;
-      width: 2px;
-      background-color: #edebe9;
+      width: 4px;
+      background-color: #d2d0ce;
       cursor: pointer;
+      border-radius: 2px;
+      transition: background-color 0.1s, width 0.1s;
     }
 
     .comment-thread-line:hover {
       background-color: #0f6cbd;
+      width: 6px;
+      left: -15px;
     }
 
     .comment-content {
