@@ -132,15 +132,15 @@ import { RedditPost, PostType } from '../../models/reddit.models';
       display: flex;
       flex-direction: column;
       user-select: none;
+      font-family: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
     }
 
     .mail-list-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid #edebe9;
+      padding: 16px 16px 8px 16px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      background: #faf9f8;
+      align-items: flex-start;
+      background: #ffffff;
     }
 
     .header-title {
@@ -149,40 +149,42 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     }
 
     .inbox-name {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 600;
-      color: #323130;
+      color: #242424;
+      line-height: 28px;
     }
 
     .mail-count {
       font-size: 12px;
-      color: #605e5c;
+      color: #616161;
       margin-top: 2px;
     }
 
     .header-actions {
       display: flex;
-      gap: 4px;
+      gap: 2px;
     }
 
     .icon-btn {
-      padding: 8px;
+      width: 32px;
+      height: 32px;
       border: none;
       background: transparent;
       cursor: pointer;
       border-radius: 4px;
-      color: #605e5c;
+      color: #616161;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     .icon-btn:hover:not(:disabled) {
-      background-color: #edebe9;
+      background-color: #f5f5f5;
     }
 
     .icon-btn:disabled {
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: not-allowed;
     }
 
@@ -197,38 +199,41 @@ import { RedditPost, PostType } from '../../models/reddit.models';
 
     .mail-tabs {
       display: flex;
+      padding: 0 16px;
+      gap: 16px;
       border-bottom: 1px solid #edebe9;
-      background: #faf9f8;
+      background: #ffffff;
     }
 
     .tab {
-      flex: 1;
-      padding: 10px 16px;
+      padding: 8px 4px;
       border: none;
       background: transparent;
       cursor: pointer;
       font-size: 14px;
-      color: #605e5c;
+      color: #616161;
       position: relative;
+      font-family: inherit;
     }
 
     .tab.active {
-      color: #0078d4;
+      color: #242424;
       font-weight: 600;
     }
 
     .tab.active::after {
       content: '';
       position: absolute;
-      bottom: 0;
-      left: 16px;
-      right: 16px;
+      bottom: -1px;
+      left: 0;
+      right: 0;
       height: 2px;
-      background-color: #0078d4;
+      background-color: #0f6cbd;
+      border-radius: 1px 1px 0 0;
     }
 
     .tab:hover:not(.active) {
-      background-color: #edebe9;
+      color: #242424;
     }
 
     .mail-items {
@@ -238,8 +243,8 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     }
 
     .mail-item {
-      padding: 12px 12px 12px 8px;
-      border-bottom: 1px solid #f3f2f1;
+      padding: 10px 16px 10px 12px;
+      border-bottom: 1px solid #f5f5f5;
       cursor: pointer;
       display: flex;
       align-items: flex-start;
@@ -249,22 +254,23 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     }
 
     .mail-item:hover {
-      background-color: #f3f2f1;
+      background-color: #f5f5f5;
     }
 
     .mail-item.selected {
-      background-color: #e1dfdd;
+      background-color: #ebebeb;
     }
 
     .mail-item.important {
-      border-left: 3px solid #d13438;
-      padding-left: 5px;
+      border-left: 3px solid #c50f1f;
+      padding-left: 9px;
     }
 
     .mail-checkbox {
       opacity: 0;
-      transition: opacity 0.1s;
-      padding-top: 2px;
+      transition: opacity 0.15s;
+      padding-top: 4px;
+      width: 18px;
     }
 
     .mail-item:hover .mail-checkbox {
@@ -272,22 +278,23 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     }
 
     .mail-checkbox input {
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
       cursor: pointer;
+      accent-color: #0f6cbd;
     }
 
     .mail-indicator {
-      width: 4px;
-      min-height: 40px;
-      border-radius: 2px;
+      width: 3px;
+      min-height: 48px;
+      border-radius: 1.5px;
       flex-shrink: 0;
       background-color: transparent;
       align-self: stretch;
     }
 
     .mail-indicator.unread {
-      background-color: #0078d4;
+      background-color: #0f6cbd;
     }
 
     .mail-content {
@@ -298,13 +305,14 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     .mail-row-1 {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       margin-bottom: 2px;
+      line-height: 20px;
     }
 
     .sender {
       font-size: 14px;
-      color: #323130;
+      color: #242424;
       flex-shrink: 1;
       white-space: nowrap;
       overflow: hidden;
@@ -313,7 +321,6 @@ import { RedditPost, PostType } from '../../models/reddit.models';
 
     .sender.unread {
       font-weight: 600;
-      color: #0078d4;
     }
 
     .mail-icons {
@@ -323,27 +330,28 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     }
 
     .attachment-icon {
-      fill: #605e5c;
+      fill: #616161;
     }
 
     .important-icon {
-      fill: #d13438;
+      fill: #c50f1f;
     }
 
     .date {
       font-size: 12px;
-      color: #605e5c;
+      color: #616161;
       flex-shrink: 0;
       margin-left: auto;
     }
 
     .mail-row-2 {
       margin-bottom: 2px;
+      line-height: 20px;
     }
 
     .subject {
       font-size: 14px;
-      color: #323130;
+      color: #242424;
       display: block;
       white-space: nowrap;
       overflow: hidden;
@@ -357,12 +365,13 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     .mail-row-3 {
       display: flex;
       gap: 6px;
-      font-size: 13px;
-      color: #605e5c;
+      font-size: 12px;
+      color: #616161;
+      line-height: 16px;
     }
 
     .folder-tag {
-      color: #0078d4;
+      color: #0f6cbd;
       font-weight: 500;
       flex-shrink: 0;
     }
@@ -376,7 +385,7 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     .mail-meta {
       display: flex;
       gap: 6px;
-      margin-top: 4px;
+      margin-top: 6px;
       flex-wrap: wrap;
     }
 
@@ -385,32 +394,32 @@ import { RedditPost, PostType } from '../../models/reddit.models';
       align-items: center;
       gap: 4px;
       font-size: 11px;
-      color: #605e5c;
-      background: #f3f2f1;
-      padding: 2px 6px;
-      border-radius: 3px;
+      color: #616161;
+      background: #f0f0f0;
+      padding: 2px 8px;
+      border-radius: 4px;
     }
 
     .type-badge svg {
-      fill: #605e5c;
+      fill: #616161;
     }
 
     .flair-badge {
       font-size: 11px;
-      color: #0078d4;
-      background: #deecf9;
-      padding: 2px 6px;
-      border-radius: 3px;
+      color: #0f6cbd;
+      background: #ebf3fc;
+      padding: 2px 8px;
+      border-radius: 4px;
     }
 
     .loading, .empty, .loading-more {
-      padding: 32px 24px;
+      padding: 40px 24px;
       text-align: center;
-      color: #605e5c;
+      color: #616161;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
     }
 
     .loading-more {
@@ -420,16 +429,17 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     }
 
     .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #edebe9;
-      border-top-color: #0078d4;
+      width: 24px;
+      height: 24px;
+      border: 2px solid #e0e0e0;
+      border-top-color: #0f6cbd;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
 
     .empty p {
       margin: 0;
+      font-size: 14px;
     }
   `]
 })

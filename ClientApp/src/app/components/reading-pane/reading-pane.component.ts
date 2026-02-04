@@ -193,15 +193,17 @@ import { RedditPost, PostType } from '../../models/reddit.models';
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      font-family: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
     }
 
     .action-bar {
       display: flex;
       align-items: center;
-      padding: 8px 16px;
+      padding: 4px 16px;
       border-bottom: 1px solid #edebe9;
-      background: #faf9f8;
+      background: #ffffff;
       gap: 4px;
+      min-height: 44px;
     }
 
     .action-group {
@@ -211,8 +213,8 @@ import { RedditPost, PostType } from '../../models/reddit.models';
 
     .action-separator {
       width: 1px;
-      height: 24px;
-      background: #edebe9;
+      height: 20px;
+      background: #d1d1d1;
       margin: 0 8px;
     }
 
@@ -225,22 +227,23 @@ import { RedditPost, PostType } from '../../models/reddit.models';
       background: transparent;
       cursor: pointer;
       border-radius: 4px;
-      font-size: 13px;
-      color: #323130;
+      font-size: 14px;
+      color: #242424;
       transition: background-color 0.1s;
+      font-family: inherit;
     }
 
     .action-btn:hover {
-      background-color: #edebe9;
+      background-color: #f5f5f5;
     }
 
     .action-btn.primary {
-      background-color: #0078d4;
+      background-color: #0f6cbd;
       color: white;
     }
 
     .action-btn.primary:hover {
-      background-color: #106ebe;
+      background-color: #115ea3;
     }
 
     .action-btn.primary svg {
@@ -248,7 +251,7 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     }
 
     .action-btn svg {
-      fill: #323130;
+      fill: #242424;
     }
 
     .more-actions {
@@ -258,15 +261,15 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     .email-content {
       flex: 1;
       overflow-y: auto;
-      padding: 20px 24px;
+      padding: 24px 32px;
     }
 
     .email-subject {
-      font-size: 21px;
+      font-size: 22px;
       font-weight: 600;
-      color: #323130;
+      color: #242424;
       margin: 0 0 12px 0;
-      line-height: 1.3;
+      line-height: 1.36;
     }
 
     .email-badges {
@@ -286,17 +289,17 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     }
 
     .badge.important {
-      background: #fde7e9;
-      color: #a80000;
+      background: #fdf3f4;
+      color: #c50f1f;
     }
 
     .badge.important svg {
-      fill: #a80000;
+      fill: #c50f1f;
     }
 
     .badge.flair {
-      background: #deecf9;
-      color: #0078d4;
+      background: #ebf3fc;
+      color: #0f6cbd;
     }
 
     .sender-section {
@@ -315,7 +318,7 @@ import { RedditPost, PostType } from '../../models/reddit.models';
       align-items: center;
       justify-content: center;
       font-size: 16px;
-      font-weight: 600;
+      font-weight: 400;
       color: white;
       flex-shrink: 0;
     }
@@ -335,18 +338,18 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     .sender-name {
       font-size: 14px;
       font-weight: 600;
-      color: #323130;
+      color: #242424;
     }
 
     .sender-email {
-      font-size: 13px;
-      color: #605e5c;
+      font-size: 12px;
+      color: #616161;
     }
 
     .recipient-row {
       margin-top: 4px;
-      font-size: 13px;
-      color: #605e5c;
+      font-size: 12px;
+      color: #616161;
     }
 
     .recipient-row .label {
@@ -354,7 +357,7 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     }
 
     .recipient {
-      color: #0078d4;
+      color: #0f6cbd;
     }
 
     .date-section {
@@ -362,28 +365,29 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     }
 
     .date {
-      font-size: 13px;
-      color: #605e5c;
+      font-size: 12px;
+      color: #616161;
     }
 
     .attachment-bar {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 12px;
+      padding: 10px 12px;
       margin: 16px 0;
-      background: #f3f2f1;
+      background: #faf9f8;
+      border: 1px solid #edebe9;
       border-radius: 4px;
       font-size: 13px;
-      color: #323130;
+      color: #242424;
     }
 
     .attachment-bar svg {
-      fill: #605e5c;
+      fill: #616161;
     }
 
     .attachment-link {
-      color: #0078d4;
+      color: #0f6cbd;
       text-decoration: none;
       margin-left: auto;
     }
@@ -395,8 +399,8 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     .message-body {
       padding: 20px 0;
       font-size: 14px;
-      line-height: 1.6;
-      color: #323130;
+      line-height: 1.5;
+      color: #242424;
     }
 
     .html-content {
@@ -404,29 +408,32 @@ import { RedditPost, PostType } from '../../models/reddit.models';
       overflow-wrap: break-word;
     }
 
-    .html-content :deep(a) {
-      color: #0078d4;
+    .html-content ::ng-deep a {
+      color: #0f6cbd;
     }
 
-    .html-content :deep(pre) {
-      background: #f3f2f1;
+    .html-content ::ng-deep pre {
+      background: #faf9f8;
       padding: 12px;
       border-radius: 4px;
       overflow-x: auto;
+      border: 1px solid #edebe9;
     }
 
-    .html-content :deep(code) {
-      background: #f3f2f1;
+    .html-content ::ng-deep code {
+      background: #faf9f8;
       padding: 2px 6px;
       border-radius: 3px;
-      font-family: 'Consolas', monospace;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 13px;
     }
 
-    .html-content :deep(blockquote) {
-      border-left: 4px solid #0078d4;
+    .html-content ::ng-deep blockquote {
+      border-left: 3px solid #0f6cbd;
       margin: 16px 0;
       padding: 8px 16px;
-      background: #f9f9f9;
+      background: #faf9f8;
+      color: #616161;
     }
 
     .text-content {
@@ -443,6 +450,7 @@ import { RedditPost, PostType } from '../../models/reddit.models';
       max-height: 500px;
       border-radius: 4px;
       object-fit: contain;
+      border: 1px solid #edebe9;
     }
 
     .link-content {
@@ -453,20 +461,22 @@ import { RedditPost, PostType } from '../../models/reddit.models';
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      color: #0078d4;
+      color: #0f6cbd;
       text-decoration: none;
-      padding: 12px 16px;
-      background: #f3f2f1;
+      padding: 10px 16px;
+      background: #faf9f8;
+      border: 1px solid #edebe9;
       border-radius: 4px;
       word-break: break-all;
+      font-size: 14px;
     }
 
     .external-link:hover {
-      background: #edebe9;
+      background: #f5f5f5;
     }
 
     .external-link svg {
-      fill: #0078d4;
+      fill: #0f6cbd;
       flex-shrink: 0;
     }
 
@@ -481,28 +491,29 @@ import { RedditPost, PostType } from '../../models/reddit.models';
 
     .stats {
       display: flex;
-      gap: 20px;
+      gap: 24px;
     }
 
     .stat {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 13px;
-      color: #605e5c;
+      font-size: 12px;
+      color: #616161;
     }
 
     .stat svg {
-      fill: #0078d4;
+      fill: #0f6cbd;
     }
 
     .view-reddit {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      color: #0078d4;
+      color: #0f6cbd;
       text-decoration: none;
-      font-size: 13px;
+      font-size: 12px;
+      font-weight: 600;
     }
 
     .view-reddit:hover {
@@ -510,7 +521,7 @@ import { RedditPost, PostType } from '../../models/reddit.models';
     }
 
     .view-reddit svg {
-      fill: #0078d4;
+      fill: #0f6cbd;
     }
 
     .empty-state {
@@ -519,19 +530,19 @@ import { RedditPost, PostType } from '../../models/reddit.models';
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: #605e5c;
+      color: #616161;
       text-align: center;
       padding: 40px;
     }
 
     .empty-icon {
-      margin-bottom: 16px;
+      margin-bottom: 24px;
     }
 
     .empty-state h2 {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 600;
-      color: #323130;
+      color: #242424;
       margin: 0 0 8px 0;
     }
 

@@ -31,12 +31,14 @@ import { ReadingPaneComponent } from './components/reading-pane/reading-pane.com
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      background-color: #f5f5f5;
     }
 
     .app-content {
       flex: 1;
       display: flex;
       overflow: hidden;
+      background-color: #ffffff;
     }
   `]
 })

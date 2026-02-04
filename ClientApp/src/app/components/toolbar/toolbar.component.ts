@@ -8,84 +8,52 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="toolbar">
       <div class="toolbar-left">
-        <!-- App Launcher (9 dots) -->
-        <button class="toolbar-btn app-launcher" title="App launcher">
-          <svg width="20" height="20" viewBox="0 0 20 20">
-            <circle cx="4" cy="4" r="1.5"/>
-            <circle cx="10" cy="4" r="1.5"/>
-            <circle cx="16" cy="4" r="1.5"/>
-            <circle cx="4" cy="10" r="1.5"/>
-            <circle cx="10" cy="10" r="1.5"/>
-            <circle cx="16" cy="10" r="1.5"/>
-            <circle cx="4" cy="16" r="1.5"/>
-            <circle cx="10" cy="16" r="1.5"/>
-            <circle cx="16" cy="16" r="1.5"/>
+        <!-- Microsoft 365 App Launcher (Waffle) -->
+        <button class="toolbar-btn waffle-btn" title="Microsoft 365">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="white">
+            <path d="M2 2h4v4H2V2zm6 0h4v4H8V2zm-6 6h4v4H2V8zm6 0h4v4H8V8z" fill-opacity="0.9"/>
           </svg>
         </button>
 
-        <!-- Outlook Logo -->
-        <div class="app-brand">
-          <svg class="outlook-icon" width="20" height="20" viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-            <ellipse cx="12" cy="12" rx="5" ry="3"/>
+        <!-- Outlook Brand -->
+        <a class="app-brand" href="/">
+          <svg class="outlook-logo" viewBox="0 0 16 16" width="18" height="18">
+            <path fill="#0078d4" d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0z"/>
+            <path fill="#fff" d="M8 3.5c-2.49 0-4.5 2.01-4.5 4.5s2.01 4.5 4.5 4.5 4.5-2.01 4.5-4.5S10.49 3.5 8 3.5zm0 7.5c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
           </svg>
           <span class="app-name">Outlook</span>
-        </div>
+        </a>
       </div>
 
       <div class="toolbar-center">
-        <div class="search-box">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="#605e5c">
+        <button class="search-box" (click)="focusSearch()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="#616161">
             <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
           </svg>
-          <input type="text" placeholder="Search" />
-          <span class="search-shortcut">Alt+Q</span>
-        </div>
+          <span class="search-placeholder">Search</span>
+        </button>
       </div>
 
       <div class="toolbar-right">
-        <!-- Microsoft 365 -->
-        <button class="toolbar-btn" title="Microsoft 365">
-          <svg width="20" height="20" viewBox="0 0 20 20">
-            <path d="M2 2h7v7H2V2zm9 0h7v7h-7V2zM2 11h7v7H2v-7zm9 0h7v7h-7v-7z"/>
-          </svg>
-        </button>
-
-        <!-- Teams Chat -->
-        <button class="toolbar-btn" title="Teams Chat">
-          <svg width="20" height="20" viewBox="0 0 20 20">
-            <path d="M16 6h-2V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2v2a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zM4 12V4h8v2H8a2 2 0 0 0-2 2v4H4zm12 4H8V8h8v8z"/>
-          </svg>
-        </button>
-
-        <!-- Notifications -->
-        <button class="toolbar-btn notification-btn" title="Notifications">
-          <svg width="20" height="20" viewBox="0 0 20 20">
-            <path d="M10 18a2 2 0 0 0 2-2H8a2 2 0 0 0 2 2zm6-4V9a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2z"/>
-          </svg>
-          <span class="notification-dot"></span>
-        </button>
-
-        <!-- Settings -->
+        <!-- Settings (Gear) -->
         <button class="toolbar-btn" title="Settings">
-          <svg width="20" height="20" viewBox="0 0 20 20">
-            <path d="M10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
-            <path d="M17.4 11l1.6-1.2V8.2L17.4 7l-.6-1.4.9-1.8-1.4-1.4-1.8.9L13 2.6 11.8 1H8.2L7 2.6l-1.4-.6-1.8-.9L2.4 2.5l.9 1.8L2.6 5.7 1 7v2.6L2.6 11l.6 1.4-.9 1.8 1.4 1.4 1.8-.9 1.4.6L8.2 17h2.6l1.2-1.6 1.4.6 1.8.9 1.4-1.4-.9-1.8.6-1.4zM10 14a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
+            <path d="M1.91 7.38A8.5 8.5 0 0 1 3.7 4.3l.16.08 1.04.47.9-.57c.41-.26.84-.48 1.3-.66L7.5 3.4V2.25c0-.41.34-.75.75-.75h1.5c.41 0 .75.34.75.75V3.4l.4.22c.46.18.89.4 1.3.66l.9.57 1.04-.47.16-.08a8.5 8.5 0 0 1 1.79 3.08l-.13.12-.84.75v1.06l.02.52.82.74.13.12a8.5 8.5 0 0 1-1.79 3.08l-.16-.08-1.04-.47-.9.57c-.41.26-.84.48-1.3.66l-.4.22v1.15c0 .41-.34.75-.75.75h-1.5a.75.75 0 0 1-.75-.75v-1.15l-.4-.22a5.5 5.5 0 0 1-1.3-.66l-.9-.57-1.04.47-.16.08a8.5 8.5 0 0 1-1.79-3.08l.13-.12.84-.74.02-.53v-1.05l-.84-.75-.13-.12zM10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
           </svg>
         </button>
 
-        <!-- Help -->
+        <!-- Help (Question mark) -->
         <button class="toolbar-btn" title="Help">
-          <svg width="20" height="20" viewBox="0 0 20 20">
-            <path d="M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z"/>
-            <path d="M10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-            <path d="M10 4a3 3 0 0 0-3 3h2a1 1 0 1 1 2 0c0 1-1 1.5-1 3h2c0-1.5 1-2 1-3a3 3 0 0 0-3-3z"/>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
+            <path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm0 14.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM10 11a.75.75 0 0 1-.75-.75v-.38c0-.78.64-1.06 1.12-1.28.37-.17.63-.3.63-.59 0-.42-.34-.75-.75-.75a.74.74 0 0 0-.72.53.75.75 0 1 1-1.45-.38A2.24 2.24 0 0 1 10 6a2.25 2.25 0 0 1 2.25 2.25c0 1.1-.79 1.47-1.35 1.72-.26.12-.4.2-.4.28v.25c0 .41-.34.75-.75.75h.25zm-.75 2a.75.75 0 1 1 1.5 0 .75.75 0 0 1-1.5 0z"/>
           </svg>
         </button>
 
-        <!-- User Avatar -->
-        <button class="user-avatar" title="Account">
-          <span>JD</span>
+        <!-- User Account -->
+        <button class="user-btn" title="Account manager">
+          <div class="user-avatar">
+            <span>ME</span>
+          </div>
         </button>
       </div>
     </div>
@@ -93,152 +61,139 @@ import { CommonModule } from '@angular/common';
   styles: [`
     .toolbar {
       height: 48px;
-      background-color: #0078d4;
+      background-color: #0f6cbd;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 8px 0 12px;
-      user-select: none;
+      padding: 0 4px;
+      font-family: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
     }
 
     .toolbar-left {
       display: flex;
       align-items: center;
-      gap: 8px;
+      flex-shrink: 0;
     }
 
     .toolbar-btn {
+      width: 48px;
+      height: 48px;
       background: transparent;
       border: none;
-      padding: 8px;
       cursor: pointer;
-      border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
     }
 
     .toolbar-btn:hover {
       background-color: rgba(255, 255, 255, 0.1);
     }
 
-    .toolbar-btn svg {
-      fill: white;
-    }
-
-    .app-launcher svg {
-      fill: white;
-      opacity: 0.9;
+    .waffle-btn {
+      width: 48px;
     }
 
     .app-brand {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 0 8px;
+      padding: 0 12px 0 4px;
+      text-decoration: none;
+      height: 48px;
     }
 
-    .outlook-icon {
-      fill: white;
+    .app-brand:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .outlook-logo {
+      flex-shrink: 0;
     }
 
     .app-name {
       color: white;
       font-size: 16px;
       font-weight: 600;
-      letter-spacing: -0.2px;
     }
 
     .toolbar-center {
       flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 0 8px;
       max-width: 468px;
-      margin: 0 16px;
+      margin: 0 auto;
     }
 
     .search-box {
+      width: 100%;
+      max-width: 468px;
+      height: 32px;
+      background-color: rgba(255, 255, 255, 0.7);
+      border: none;
+      border-radius: 4px;
       display: flex;
       align-items: center;
-      background-color: rgba(255, 255, 255, 0.95);
-      border-radius: 4px;
-      padding: 0 12px;
-      height: 32px;
+      padding: 0 10px;
       gap: 8px;
+      cursor: text;
+      transition: background-color 0.1s;
     }
 
-    .search-box:focus-within {
+    .search-box:hover {
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .search-box:focus {
       background-color: white;
-      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
-    }
-
-    .search-box svg {
-      flex-shrink: 0;
-      opacity: 0.7;
-    }
-
-    .search-box input {
-      flex: 1;
-      border: none;
       outline: none;
+    }
+
+    .search-placeholder {
+      color: #616161;
       font-size: 14px;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: transparent;
-      min-width: 0;
-    }
-
-    .search-box input::placeholder {
-      color: #605e5c;
-    }
-
-    .search-shortcut {
-      font-size: 11px;
-      color: #605e5c;
-      background: #f3f2f1;
-      padding: 2px 6px;
-      border-radius: 3px;
-      white-space: nowrap;
+      font-family: inherit;
     }
 
     .toolbar-right {
       display: flex;
       align-items: center;
-      gap: 2px;
+      flex-shrink: 0;
+      margin-left: auto;
     }
 
-    .notification-btn {
-      position: relative;
+    .user-btn {
+      width: 48px;
+      height: 48px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
     }
 
-    .notification-dot {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 8px;
-      height: 8px;
-      background-color: #d13438;
-      border-radius: 50%;
-      border: 2px solid #0078d4;
+    .user-btn:hover {
+      background-color: rgba(255, 255, 255, 0.1);
     }
 
     .user-avatar {
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #8764b8 0%, #5c2d91 100%);
+      background-color: #8764b8;
       color: white;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      margin-left: 4px;
-    }
-
-    .user-avatar:hover {
-      opacity: 0.9;
+      font-weight: 400;
     }
   `]
 })
-export class ToolbarComponent {}
+export class ToolbarComponent {
+  focusSearch(): void {
+    // Placeholder for search functionality
+  }
+}
