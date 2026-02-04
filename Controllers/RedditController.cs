@@ -24,14 +24,15 @@ public class RedditController : ControllerBase
         [FromQuery] int limit = 25,
         [FromQuery] string? after = null,
         [FromQuery] string? before = null,
-        [FromQuery] string sort = "hot")
+        [FromQuery] string sort = "hot",
+        [FromQuery] bool includeNsfw = false)
     {
         if (limit < 1 || limit > 100)
         {
             limit = 25;
         }
 
-        var response = await _redditService.GetPostsAsync(subreddit, limit, after, before, sort);
+        var response = await _redditService.GetPostsAsync(subreddit, limit, after, before, sort, includeNsfw);
         return Ok(response);
     }
 

@@ -25,7 +25,8 @@ public class RedditService : IRedditService
         int limit = 25,
         string? after = null,
         string? before = null,
-        string sort = "hot")
+        string sort = "hot",
+        bool includeNsfw = false)
     {
         try
         {
@@ -58,9 +59,9 @@ public class RedditService : IRedditService
                 return new PaginatedResponse<RedditPost>();
             }
 
-            // Filtrar NSFW y mapear
+            // Filtrar NSFW condicionalmente y mapear
             var posts = apiResponse.Data.Children
-                .Where(c => c.Data != null && !c.Data.IsNsfw) // Filtro SFW
+                .Where(c => c.Data != null && (includeNsfw || !c.Data.IsNsfw))
                 .Take(limit)
                 .Select(c => MapToRedditPost(c.Data!))
                 .ToList();

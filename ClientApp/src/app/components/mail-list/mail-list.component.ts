@@ -477,7 +477,13 @@ export class MailListComponent implements OnChanges, OnDestroy {
   ) {
     this.settings = this.settingsService.settings;
     this.settingsSubscription = this.settingsService.settings$.subscribe(s => {
+      const nsfwChanged = this.settings.showNsfw !== s.showNsfw;
       this.settings = s;
+      if (nsfwChanged) {
+        this.posts = [];
+        this.currentAfter = undefined;
+        this.loadPosts();
+      }
     });
     this.redditService.selectedPost$.subscribe(post => {
       this.selectedPost = post;
@@ -498,7 +504,7 @@ export class MailListComponent implements OnChanges, OnDestroy {
 
   loadPosts(): void {
     this.loading = true;
-    this.redditService.getPosts(this.currentSubreddit, 25, undefined, undefined, this.currentSort).subscribe({
+    this.redditService.getPosts(this.currentSubreddit, 25, undefined, undefined, this.currentSort, this.settings.showNsfw).subscribe({
       next: (response) => {
         this.posts = response.items;
         this.currentAfter = response.after;
@@ -515,7 +521,7 @@ export class MailListComponent implements OnChanges, OnDestroy {
     if (this.loadingMore || !this.currentAfter) return;
 
     this.loadingMore = true;
-    this.redditService.getPosts(this.currentSubreddit, 25, this.currentAfter, undefined, this.currentSort).subscribe({
+    this.redditService.getPosts(this.currentSubreddit, 25, this.currentAfter, undefined, this.currentSort, this.settings.showNsfw).subscribe({
       next: (response) => {
         this.posts = [...this.posts, ...response.items];
         this.currentAfter = response.after;

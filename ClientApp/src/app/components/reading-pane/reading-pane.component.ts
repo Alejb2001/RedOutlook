@@ -128,7 +128,7 @@ import { RedditPost, RedditComment, PostType } from '../../models/reddit.models'
             <!-- Image post -->
             <div *ngIf="selectedPost.type === PostType.Image && selectedPost.url" class="media-content">
               <img *ngIf="!settings.hideImages" [src]="selectedPost.url" alt="Post image" class="post-image" loading="lazy">
-              <div *ngIf="settings.hideImages" class="image-placeholder">(imagen/gif)</div>
+              <div *ngIf="settings.hideImages" class="image-placeholder">(image/gif)</div>
             </div>
 
             <!-- Link post (when no self text) -->
@@ -895,6 +895,17 @@ export class ReadingPaneComponent implements OnDestroy {
       .replace(/&amp;/g, '&')
       .replace(/<!-- SC_OFF -->/g, '')
       .replace(/<!-- SC_ON -->/g, '');
+
+    // Hide images if setting is enabled
+    if (this.settings.hideImages) {
+      // Replace <img> tags with placeholder
+      cleanHtml = cleanHtml.replace(/<img[^>]*>/gi, '<span class="image-placeholder">(image/gif)</span>');
+      // Replace links to images/gifs with placeholder
+      cleanHtml = cleanHtml.replace(
+        /<a[^>]*href="[^"]*\.(jpg|jpeg|png|gif|webp|bmp)"[^>]*>.*?<\/a>/gi,
+        '<span class="image-placeholder">(image/gif)</span>'
+      );
+    }
 
     return this.sanitizer.bypassSecurityTrustHtml(cleanHtml);
   }

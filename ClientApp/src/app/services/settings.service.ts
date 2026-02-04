@@ -4,11 +4,13 @@ import { BehaviorSubject } from 'rxjs';
 export interface AppSettings {
   showSortTabs: boolean;
   hideImages: boolean;
+  showNsfw: boolean;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
   showSortTabs: true,
-  hideImages: false
+  hideImages: false,
+  showNsfw: false
 };
 
 const STORAGE_KEY = 'outlookReddit_settings';
@@ -40,6 +42,10 @@ export class SettingsService {
 
   toggleHideImages(): void {
     this.updateSettings({ hideImages: !this.settings.hideImages });
+  }
+
+  toggleShowNsfw(): void {
+    this.updateSettings({ showNsfw: !this.settings.showNsfw });
   }
 
   private loadSettings(): void {

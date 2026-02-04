@@ -26,12 +26,14 @@ export class RedditService {
     limit: number = 25,
     after?: string,
     before?: string,
-    sort: string = 'hot'
+    sort: string = 'hot',
+    includeNsfw: boolean = false
   ): Observable<PaginatedResponse<RedditPost>> {
     let params = new HttpParams()
       .set('subreddit', subreddit)
       .set('limit', limit.toString())
-      .set('sort', sort);
+      .set('sort', sort)
+      .set('includeNsfw', includeNsfw.toString());
 
     if (after) {
       params = params.set('after', after);

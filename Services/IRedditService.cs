@@ -9,7 +9,8 @@ public interface IRedditService
         int limit = 25,
         string? after = null,
         string? before = null,
-        string sort = "hot");
+        string sort = "hot",
+        bool includeNsfw = false);
 
     Task<RedditPost?> GetPostByIdAsync(string subreddit, string postId);
     Task<List<RedditComment>> GetCommentsAsync(string subreddit, string postId, int limit = 50, string sort = "best");
