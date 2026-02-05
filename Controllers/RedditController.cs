@@ -9,10 +9,12 @@ namespace OfficeReddit.Controllers;
 public class RedditController : ControllerBase
 {
     private readonly IRedditService _redditService;
+    private readonly ILogger<RedditController> _logger;
 
-    public RedditController(IRedditService redditService)
+    public RedditController(IRedditService redditService, ILogger<RedditController> logger)
     {
         _redditService = redditService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -27,13 +29,21 @@ public class RedditController : ControllerBase
         [FromQuery] string sort = "hot",
         [FromQuery] bool includeNsfw = false)
     {
-        if (limit < 1 || limit > 100)
+        try
         {
-            limit = 25;
-        }
+            if (limit < 1 || limit > 100)
+            {
+                limit = 25;
+            }
 
-        var response = await _redditService.GetPostsAsync(subreddit, limit, after, before, sort, includeNsfw);
-        return Ok(response);
+            var response = await _redditService.GetPostsAsync(subreddit, limit, after, before, sort, includeNsfw);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetPosts endpoint");
+            return StatusCode(500, new { error = ex.Message, type = ex.GetType().Name });
+        }
     }
 
     /// <summary>
@@ -56,13 +66,21 @@ public class RedditController : ControllerBase
     [HttpGet("subreddits/popular")]
     public async Task<ActionResult<List<SubredditInfo>>> GetPopularSubreddits([FromQuery] int limit = 10)
     {
-        if (limit < 1 || limit > 50)
+        try
         {
-            limit = 10;
-        }
+            if (limit < 1 || limit > 50)
+            {
+                limit = 10;
+            }
 
-        var subreddits = await _redditService.GetPopularSubredditsAsync(limit);
-        return Ok(subreddits);
+            var subreddits = await _redditService.GetPopularSubredditsAsync(limit);
+            return Ok(subreddits);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetPopularSubreddits endpoint");
+            return StatusCode(500, new { error = ex.Message, type = ex.GetType().Name });
+        }
     }
 
     /// <summary>
