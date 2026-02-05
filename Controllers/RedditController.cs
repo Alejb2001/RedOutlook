@@ -9,12 +9,10 @@ namespace OfficeReddit.Controllers;
 public class RedditController : ControllerBase
 {
     private readonly IRedditService _redditService;
-    private readonly ILogger<RedditController> _logger;
 
-    public RedditController(IRedditService redditService, ILogger<RedditController> logger)
+    public RedditController(IRedditService redditService)
     {
         _redditService = redditService;
-        _logger = logger;
     }
 
     /// <summary>
@@ -23,7 +21,7 @@ public class RedditController : ControllerBase
     [HttpGet("health")]
     public ActionResult Health()
     {
-        return Ok(new { status = "ok", timestamp = DateTime.UtcNow });
+        return Ok(new { status = "ok", timestamp = DateTime.UtcNow, controller = "reddit" });
     }
 
     /// <summary>
@@ -76,7 +74,6 @@ public class RedditController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in GetPosts endpoint");
             return StatusCode(500, new { error = ex.Message, type = ex.GetType().Name });
         }
     }
@@ -113,7 +110,6 @@ public class RedditController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in GetPopularSubreddits endpoint");
             return StatusCode(500, new { error = ex.Message, type = ex.GetType().Name });
         }
     }
