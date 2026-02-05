@@ -118,8 +118,17 @@ import { RedditPost, PostType } from '../../models/reddit.models';
           Loading messages...
         </div>
 
+        <!-- Error state -->
+        <div *ngIf="!loading && errorMessage" class="error-state">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="#d83b01">
+            <path d="M24 4C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 20-20S35.05 4 24 4zm2 30h-4v-4h4v4zm0-8h-4V14h4v12z"/>
+          </svg>
+          <p>{{ errorMessage }}</p>
+          <button class="retry-btn" (click)="refresh()">Try again</button>
+        </div>
+
         <!-- Empty state -->
-        <div *ngIf="!loading && posts.length === 0" class="empty">
+        <div *ngIf="!loading && !errorMessage && posts.length === 0" class="empty">
           <svg width="48" height="48" viewBox="0 0 48 48" fill="#c8c6c4">
             <path d="M40 8H8a4 4 0 0 0-4 4v24a4 4 0 0 0 4 4h32a4 4 0 0 0 4-4V12a4 4 0 0 0-4-4zm-2 4L24 22 10 12h28zm2 24H8V14l16 12 16-12v22z"/>
           </svg>
@@ -448,6 +457,38 @@ import { RedditPost, PostType } from '../../models/reddit.models';
       margin: 0;
       font-size: 14px;
     }
+
+    .error-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      color: #616161;
+      gap: 12px;
+    }
+
+    .error-state p {
+      margin: 0;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .retry-btn {
+      margin-top: 8px;
+      padding: 8px 16px;
+      background: #0f6cbd;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .retry-btn:hover {
+      background: #115ea3;
+    }
   `]
 })
 export class MailListComponent implements OnChanges, OnDestroy {
@@ -461,6 +502,7 @@ export class MailListComponent implements OnChanges, OnDestroy {
   currentSort = 'hot';
   PostType = PostType;
   settings: AppSettings;
+  errorMessage: string | null = null;
 
   private settingsSubscription: Subscription;
 
@@ -504,15 +546,20 @@ export class MailListComponent implements OnChanges, OnDestroy {
 
   loadPosts(): void {
     this.loading = true;
+    this.errorMessage = null;
     this.redditService.getPosts(this.currentSubreddit, 25, undefined, undefined, this.currentSort, this.settings.showNsfw).subscribe({
       next: (response) => {
         this.posts = response.items;
         this.currentAfter = response.after;
         this.loading = false;
+        if (response.items.length === 0) {
+          this.errorMessage = 'Could not load posts. Reddit may be temporarily unavailable.';
+        }
       },
       error: (err) => {
         console.error('Error loading posts', err);
         this.loading = false;
+        this.errorMessage = 'Failed to connect to Reddit. Please try again.';
       }
     });
   }
