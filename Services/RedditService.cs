@@ -14,9 +14,9 @@ public class RedditService : IRedditService
     private static readonly string[] VideoExtensions = { ".mp4", ".webm", ".gifv" };
     private static readonly string[] ImageDomains = { "i.redd.it", "i.imgur.com", "imgur.com" };
 
-    public RedditService(HttpClient httpClient, ILogger<RedditService> logger)
+    public RedditService(IHttpClientFactory httpClientFactory, ILogger<RedditService> logger)
     {
-        _httpClient = httpClient;
+        _httpClient = httpClientFactory.CreateClient("Reddit");
         _logger = logger;
     }
 

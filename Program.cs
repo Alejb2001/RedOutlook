@@ -8,7 +8,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Register HttpClient for Reddit API
-builder.Services.AddHttpClient<IRedditService, RedditService>(client =>
+builder.Services.AddHttpClient("Reddit", client =>
 {
     client.BaseAddress = new Uri("https://www.reddit.com/");
     // Reddit requires a descriptive User-Agent
@@ -16,6 +16,9 @@ builder.Services.AddHttpClient<IRedditService, RedditService>(client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
     client.Timeout = TimeSpan.FromSeconds(30);
 });
+
+// Register RedditService
+builder.Services.AddScoped<IRedditService, RedditService>();
 
 var app = builder.Build();
 
