@@ -1,24 +1,54 @@
-# OfficeReddit
+# RedOutlook
 
-Cliente de Reddit con interfaz de Outlook Web para navegación discreta en entornos de trabajo.
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://redoutlook-production.up.railway.app)
+[![.NET](https://img.shields.io/badge/.NET-8.0-purple)](https://dotnet.microsoft.com/)
+[![Angular](https://img.shields.io/badge/Angular-19-red)](https://angular.io/)
 
-## Descripción
+[English version](README.en.md)
 
-OfficeReddit presenta el contenido de Reddit con una apariencia idéntica a Microsoft Outlook Web, permitiendo navegar subreddits como si fueran carpetas de correo y leer posts como si fueran emails.
+## Descripcion
 
-## Características
+**RedOutlook** es un cliente web de Reddit con una interfaz inspirada en Microsoft Outlook. Permite navegar posts y comentarios de Reddit de una manera familiar y productiva, ideal para usar discretamente en entornos de trabajo.
 
-- Interfaz visual idéntica a Outlook Web
-- Navegación de subreddits como carpetas
-- Posts mostrados como correos electrónicos
-- Filtro automático de contenido NSFW
-- Scroll infinito
+**Demo en vivo:** [redoutlook-production.up.railway.app](https://redoutlook-production.up.railway.app)
 
-## Tecnologías
+## Caracteristicas
 
-- ASP.NET Core (.NET 8)
-- Angular
+- **Interfaz estilo Outlook** - Navegacion familiar con panel lateral, lista de posts y panel de lectura
+- **Navegacion por subreddits** - Explora diferentes comunidades de Reddit
+- **Comentarios con threading** - Visualiza comentarios anidados como en Reddit
+- **Colapsar hilos** - Click en la barra vertical para colapsar/expandir hilos de comentarios
+- **Ordenamiento de posts** - Hot, New, Top, Rising
+- **Ordenamiento de comentarios** - Best, Top, New, Controversial, Old, Q&A
+- **Configuraciones personalizables:**
+  - Ocultar/mostrar pestanas de ordenamiento
+  - Ocultar imagenes y GIFs (reemplaza con texto)
+  - Mostrar/ocultar contenido NSFW
+- **Sidebar colapsable** - Oculta el panel lateral para mas espacio
+- **Diseno responsive** - Funciona en diferentes tamanos de pantalla
+
+## Tecnologias
+
+### Backend
+- ASP.NET Core 8
+- API de Reddit (sin autenticacion)
+
+### Frontend
+- Angular 19 
+- TypeScript
+- CSS puro 
+
+## Instalacion Local
+
+### Requisitos
+- .NET 8 SDK
+- Node.js 18+
+- npm
 
 ## Licencia
 
-MIT
+MIT License
+
+---
+
+Desarrollado con fines educativos y de entretenimiento.
