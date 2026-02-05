@@ -18,6 +18,41 @@ public class RedditController : ControllerBase
     }
 
     /// <summary>
+    /// Health check endpoint
+    /// </summary>
+    [HttpGet("health")]
+    public ActionResult Health()
+    {
+        return Ok(new { status = "ok", timestamp = DateTime.UtcNow });
+    }
+
+    /// <summary>
+    /// Test Reddit connection
+    /// </summary>
+    [HttpGet("test")]
+    public async Task<ActionResult> TestReddit()
+    {
+        try
+        {
+            var posts = await _redditService.GetPostsAsync("all", 1);
+            return Ok(new {
+                status = "ok",
+                postsCount = posts.Items.Count,
+                message = posts.Items.Count > 0 ? "Reddit API working" : "Reddit returned empty response"
+            });
+        }
+        catch (Exception ex)
+        {
+            return Ok(new {
+                status = "error",
+                errorType = ex.GetType().FullName,
+                message = ex.Message,
+                innerError = ex.InnerException?.Message
+            });
+        }
+    }
+
+    /// <summary>
     /// Obtiene posts de un subreddit con paginación
     /// </summary>
     [HttpGet("posts")]
