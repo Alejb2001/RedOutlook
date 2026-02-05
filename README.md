@@ -6,7 +6,7 @@
 
 [English version](README.en.md)
 
-## Descripcion
+## Descripción
 
 **RedOutlook** es un cliente web de Reddit con una interfaz inspirada en Microsoft Outlook. Permite navegar posts y comentarios de Reddit de una manera familiar y productiva, ideal para usar discretamente en entornos de trabajo.
 
@@ -37,8 +37,6 @@
 - Angular 19 
 - TypeScript
 - CSS puro 
-
-## Instalacion Local
 
 ### Requisitos
 - .NET 8 SDK

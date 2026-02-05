@@ -38,8 +38,6 @@
 - TypeScript
 - Pure CSS 
 
-## Local Installation
-
 ### Requirements
 - .NET 8 SDK
 - Node.js 18+
